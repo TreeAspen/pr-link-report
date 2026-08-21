@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR 链接报告生成器</title>
+<style>
+  :root{
+    --navy:#1b2a4e;
+    --accent:#e2245e;
+    --ink:#111827;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --bg:#f3f4f6;
+    --panel:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    background:var(--bg); color:var(--ink); font-size:14px;
+  }
+  .app{display:grid;grid-template-columns:380px 1fr;height:100vh}
+
+  /* ---------- 左侧控制台 ---------- */
+  .panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:16px}
+  .panel h1{font-size:16px;margin:0 0 4px}
+  .panel .hint{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 14px}
+  .grp{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px}
+  .grp>h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+  input[type=text],input[type=color],select,textarea{
+    width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:13px;background:#fff;color:var(--ink)
+  }
+  input[type=file]{width:100%;font-size:11px}
+  textarea{font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.5;resize:vertical}
+  input[type=color]{padding:2px;height:32px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  button{
+    font:inherit;font-size:13px;padding:7px 12px;border-radius:6px;border:1px solid var(--line);
+    background:#fff;color:var(--ink);cursor:pointer
+  }
+  button:hover{background:#f9fafb}
+  button.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+  button.primary:hover{filter:brightness(1.15)}
+  button.danger{color:#b91c1c}
+  button.wide{width:100%;margin-top:8px}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .sec-item{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;background:#fcfcfd}
+  .sec-item .head{display:flex;align-items:center;gap:6px}
+  .sec-item .head strong{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sec-item .head button{padding:3px 7px;font-size:12px;line-height:1}
+  .sec-body{margin-top:8px;display:none}
+  .sec-item.open .sec-body{display:block}
+  .count{color:var(--muted);font-size:11px}
+  .warn{background:#fef3c7;border:1px solid #fde68a;color:#92400e;font-size:12px;padding:8px;border-radius:6px;line-height:1.6}
+  .tip{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:11.5px;padding:7px 8px;border-radius:6px;line-height:1.6;margin-top:8px}
+  .sub-h{font-size:11px;font-weight:700;color:var(--navy);margin:12px 0 0;padding-top:8px;border-top:1px dashed var(--line)}
+
+  /* ---------- 右侧画布 ---------- */
+  .stage{overflow:auto;padding:24px 24px 70px;display:flex;justify-content:center;align-items:flex-start;position:relative}
+  .paper{
+    width:210mm;min-height:297mm;background:#fff;padding:14mm 12mm;
+    box-shadow:0 2px 16px rgba(0,0,0,.12);
+  }
+  /* 选中条目的浮动工具条 */
+  .selbar{
+    position:fixed;bottom:14px;left:calc(380px + 24px);right:24px;z-index:20;
+    background:var(--navy);color:#fff;border-radius:8px;padding:8px 12px;
+    display:none;align-items:center;gap:10px;font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.25)
+  }
+  .selbar.on{display:flex}
+  .selbar b{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .selbar .sp{flex:1}
+  .selbar button{padding:5px 10px;font-size:12px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+  .selbar button:hover{background:rgba(255,255,255,.26)}
+
+  /* ---------- 文档样式 ---------- */
+  .doc-head{border-bottom:2px solid var(--line);padding-bottom:8px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+  .doc-head img{max-height:44px}
+  .brand{font-size:20px;font-weight:800;color:var(--navy);line-height:1.1;letter-spacing:-.01em}
+  .brand small{display:block;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.04em;margin-top:3px}
+  .doc-title{font-size:24px;font-weight:800;line-height:1.25;margin:18px 0 6px}
+  .doc-sub{color:var(--muted);font-size:12px;margin:0 0 14px}
+  .doc-intro{font-size:12.5px;line-height:1.75;color:#374151;margin:0 0 18px}
+  .doc-cover{margin:0 0 18px}
+  .doc-cover img{width:100%;border:1px solid var(--line);border-radius:4px;display:block}
+  .figcap{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5;text-align:center}
+
+  .toc{background:#f8fafc;border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:20px}
+  .toc h3{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .toc ol{margin:0;padding-left:18px;columns:2;column-gap:24px;font-size:12.5px;line-height:1.9}
+  .toc a{color:var(--navy);text-decoration:none}
+
+  .section{margin-bottom:22px}
+  .sec-bar{
+    background:var(--navy);color:#fff;font-weight:700;font-size:13.5px;
+    padding:7px 12px;border-left:5px solid var(--accent);margin-bottom:10px;
+    break-after:avoid;page-break-after:avoid;
+  }
+  .sec-desc{font-size:12px;line-height:1.7;color:#4b5563;margin:0 0 10px}
+  .sec-hero{margin:0 0 12px;break-inside:avoid;page-break-inside:avoid}
+  .sec-hero img{width:100%;border:1px solid var(--line);border-radius:4px;display:block}
+
+  .cards{display:grid;gap:6px}
+  .cards.c1{grid-template-columns:1fr}
+  .cards.c2{grid-template-columns:1fr 1fr}
+  .cards.c3{grid-template-columns:repeat(3,1fr)}
+  .cards.c4{grid-template-columns:repeat(4,1fr)}
+  .card{
+    border:1px solid var(--line);border-radius:3px;padding:11px 13px;
+    display:flex;align-items:center;gap:10px;min-height:52px;
+    break-inside:avoid;page-break-inside:avoid;
+  }
+  .card .txt{flex:1;min-width:0}
+  .card a{font-weight:700;font-size:13px;color:#111827;text-decoration:none;display:block;line-height:1.3}
+  .card .sub{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .card img.logo{max-height:28px;max-width:100px;object-fit:contain;flex:0 0 auto;margin-left:8px}
+  .card.center{justify-content:center;text-align:center}
+  .card.center .txt{flex:0 1 auto}
+
+  /* 品牌方块：有 logo 显示 logo，无 logo 显示名称（对应报告首页那排方块） */
+  .tiles{display:grid;gap:8px}
+  .tiles.t2{grid-template-columns:1fr 1fr}
+  .tiles.t3{grid-template-columns:repeat(3,1fr)}
+  .tiles.t4{grid-template-columns:repeat(4,1fr)}
+  .tile{
+    border:1px solid var(--line);border-radius:3px;min-height:68px;padding:13px 18px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    break-inside:avoid;page-break-inside:avoid;
+  }
+  .tile img{max-height:36px;max-width:100%;object-fit:contain}
+  .tile a,.tile span.nm{font-weight:800;font-size:13.5px;color:#111827;text-decoration:none;line-height:1.3}
+
+  /* 截图卡片 */
+  .cards.s1{grid-template-columns:1fr;gap:14px}
+  .cards.s2{grid-template-columns:1fr 1fr;gap:12px}
+  .cards.s3{grid-template-columns:repeat(3,1fr);gap:10px}
+  .shot{
+    margin:0;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:#fff;
+    break-inside:avoid;page-break-inside:avoid;
+  }
+  .shot .frame{
+    background:#f8fafc;border-bottom:1px solid var(--line);overflow:hidden;
+    display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  /* 截图：铺满并对齐顶部（网页截图的关键信息在上方） */
+  .shot .frame img{width:100%;height:100%;display:block;object-fit:cover;object-position:center top}
+  .cards.s1 .shot .frame{height:100mm}
+  .cards.s2 .shot .frame{height:52mm}
+  .cards.s3 .shot .frame{height:36mm}
+  /* logo 占位：按原始尺寸居中，四周留白；只许缩小不许放大，避免糊 */
+  .shot .frame img.as-logo{
+    width:auto;height:auto;object-fit:contain;background:#fff;
+    max-width:calc(100% - 48px);max-height:calc(100% - 34px);
+  }
+  .cards.s3 .shot .frame img.as-logo{max-width:calc(100% - 28px);max-height:calc(100% - 20px)}
+  .shot .frame.logo-bg{background:#fff}   /* logo 多为白底，底色统一成白，避免出现白方块 */
+  .shot .frame.empty{
+    display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:11px;
+    height:36mm;background:repeating-linear-gradient(45deg,#f9fafb,#f9fafb 8px,#f3f4f6 8px,#f3f4f6 16px)
+  }
+  .shot figcaption{padding:8px 10px}
+  .shot figcaption a{font-weight:700;font-size:12.5px;color:var(--navy);text-decoration:none;line-height:1.35;display:block}
+  .shot figcaption .sub{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+  .drop{outline:2px dashed var(--accent) !important;outline-offset:2px}
+
+  /* 三栏链接列表：用 grid 按「行优先」排，和原报告的阅读顺序一致 */
+  .linklist{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 18px;font-size:11.5px;line-height:1.7;margin:0;padding:0;list-style:none}
+  .linklist li{break-inside:avoid;page-break-inside:avoid;padding-left:11px;position:relative}
+  .linklist li::before{content:'';position:absolute;left:0;top:6.5px;width:4px;height:4px;background:#111827}
+  .linklist a{color:var(--navy)}
+  .linklist .sub{color:var(--muted)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{border:1px solid var(--line);border-radius:99px;padding:4px 11px;font-size:12px}
+  .chip a{color:var(--navy);text-decoration:none;font-weight:600}
+
+  table.tbl{width:100%;border-collapse:collapse;font-size:12px}
+  table.tbl th{background:#f3f4f6;text-align:left;padding:7px 9px;border:1px solid var(--line);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  table.tbl td{padding:7px 9px;border:1px solid var(--line);vertical-align:top}
+  table.tbl a{color:var(--navy)}
+  table.tbl tr{break-inside:avoid;page-break-inside:avoid}
+  table.tbl td img{max-width:100%;display:block}
+
+  /* ---- 世界媒体名录（原报告第 11–12 页）---- */
+  .dir-box{background:#f8fafc;border:1px solid var(--line);border-radius:5px;padding:12px 14px;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+  .dir-head{font-weight:700;font-size:12.5px;color:var(--navy);display:flex;align-items:center;gap:7px}
+  .dir-head .flag{font-size:15px;line-height:1}
+  .dir-head a{color:var(--navy);text-decoration:underline}
+  .dir-count{font-size:11.5px;color:var(--muted);margin:7px 0 8px}
+  .dir-names{display:grid;grid-template-columns:repeat(3,1fr);gap:1px 18px;font-size:11px;line-height:1.75;color:#374151}
+  .dir-names span{padding-left:11px;position:relative;break-inside:avoid}
+  .dir-names span::before{content:'';position:absolute;left:0;top:6.5px;width:4px;height:4px;background:#111827}
+
+  /* ---- 社交分享行 ---- */
+  .social{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .social a{
+    border:1px solid var(--line);border-radius:3px;padding:15px 8px;text-align:center;
+    font-weight:800;font-size:13.5px;color:#111827;text-decoration:none;break-inside:avoid;
+  }
+
+  /* ---- 报告摘要面板（原报告最后一页）---- */
+  .summary{border:1px solid var(--line);border-radius:4px;padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px 22px;font-size:11.5px;line-height:1.6}
+  .summary h4{margin:0 0 3px;font-size:11.5px;font-weight:700}
+  .summary p{margin:0 0 12px;color:#374151}
+  .summary .muted{color:var(--muted)}
+  .summary ul{margin:0 0 12px;padding-left:14px}
+  .summary li{margin-bottom:3px}
+  .summary li::marker{color:#818cf8}
+  .summary a{color:var(--navy);word-break:break-all}
+  .sum-fig{display:flex;gap:9px;margin:0 0 12px;break-inside:avoid}
+  .sum-fig img{width:90px;height:auto;border:1px solid var(--line);flex:0 0 auto;object-fit:cover}
+  .sum-fig .meta{font-size:10.5px;line-height:1.55;color:#374151}
+
+  .doc-foot{margin-top:26px;border-top:1px solid var(--line);padding-top:10px;font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+
+  [contenteditable]:focus{outline:2px solid #93c5fd;outline-offset:2px;border-radius:2px}
+  .sel-row{outline:2px solid var(--accent);outline-offset:1px}
+
+  /* ---------- 导入弹窗 ---------- */
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:24px;z-index:50}
+  .modal.on{display:flex}
+  .modal .box{background:#fff;border-radius:10px;width:min(980px,100%);max-height:90vh;overflow:auto;padding:20px}
+  .modal h2{margin:0 0 4px;font-size:17px}
+  .modal .hint{color:var(--muted);font-size:12px;line-height:1.7;margin:0 0 12px}
+  .maprow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0}
+  .prev{max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:6px}
+  .prev table{border-collapse:collapse;font-size:12px;width:100%}
+  .prev th,.prev td{border:1px solid var(--line);padding:4px 7px;white-space:nowrap;max-width:230px;overflow:hidden;text-overflow:ellipsis}
+  .prev th{background:#f9fafb;position:sticky;top:0}
+  .prev td.lk{color:#1d4ed8}
+
+  /* ---------- 打印 ---------- */
+  @page{size:A4;margin:14mm 12mm}
+  @media print{
+    body{background:#fff}
+    .app{display:block;height:auto}
+    .panel,.modal,.selbar,.noprint{display:none !important}
+    .stage{padding:0;display:block;overflow:visible}
+    .paper{width:auto;min-height:0;padding:0;box-shadow:none}
+    a{text-decoration:none}
+    .sel-row{outline:none !important}
+    .shot .frame.empty{display:none}
+    img{max-width:100%}
+    .sec-bar,.toc,table.tbl th,.shot .frame{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ 控制台 ============ -->
+  <aside class="panel">
+    <h1>PR 链接报告生成器</h1>
+    <p class="hint">Excel 粘贴 → 批量生成带超链接的报告页 → 配截图 → 导出 PDF / Google Docs。右侧预览里的文字可直接点击修改。</p>
+
+    <div class="grp">
+      <h2>① 导入数据</h2>
+      <button class="primary wide" id="btnImport">📋 粘贴 Excel / 链接清单，批量导入</button>
+      <button class="wide" id="btnMatch">🔎 全文档按链接匹配 Logo</button>
+      <div class="btnrow">
+        <button id="btnDemo">载入示例</button>
+        <select id="newType" style="width:auto;flex:1">
+          <option value="links">链接卡片组</option>
+          <option value="directory">世界媒体名录</option>
+          <option value="social">社交分享行</option>
+          <option value="summary">报告摘要面板</option>
+        </select>
+        <button id="btnAddSec">+ 新增</button>
+      </div>
+      <div class="tip" id="libTip"></div>
+      <div class="tip">配截图有三种方式：① 把图片文件<b>拖到右侧任意卡片上</b>；② 点中卡片后直接 <b>Ctrl+V</b> 粘贴剪贴板截图；③ 在分组里<b>一次选多张图</b>，按文件名自动匹配条目。</div>
+    </div>
+
+    <div class="grp">
+      <h2>② 页头 / 品牌</h2>
+      <label>品牌名</label><input type="text" id="fBrand">
+      <label>品牌副标题</label><input type="text" id="fTagline">
+      <label>Logo 图片（可选）</label><input type="file" id="fLogo" accept="image/*">
+      <label>报告主标题</label><textarea id="fTitle" rows="2"></textarea>
+      <label>副信息（日期等）</label><input type="text" id="fSubtitle">
+      <label>开篇说明</label><textarea id="fIntro" rows="3"></textarea>
+      <label>封面大图（可选，如活动合影）</label>
+      <input type="file" id="fCover" accept="image/*">
+      <input type="text" id="fCoverCap" placeholder="封面图说明文字" style="margin-top:6px">
+      <button id="btnCoverDel" style="margin-top:6px;font-size:12px;padding:4px 9px">移除封面图</button>
+      <label>页脚</label><input type="text" id="fFooter">
+      <div class="row2">
+        <div><label>主题色</label><input type="color" id="fNavy"></div>
+        <div><label>强调色</label><input type="color" id="fAccent"></div>
+      </div>
+      <label style="margin-top:10px"><input type="checkbox" id="fToc" style="width:auto"> 生成目录（PDF 内部跳转锚点）</label>
+      <label><input type="checkbox" id="fIndex" style="width:auto"> 附录：链接清单（方便 Canva 里重新加链接）</label>
+    </div>
+
+    <div class="grp">
+      <h2>③ 分组 <span class="count" id="secCount"></span></h2>
+      <div id="secList"></div>
+    </div>
+
+    <div class="grp">
+      <h2>④ 导出</h2>
+      <button class="primary wide" id="btnPrint">🖨 打印 / 另存为 PDF（链接可点）</button>
+      <button class="wide" id="btnCopyDoc">📄 复制到 Google Docs（保留链接）</button>
+      <button class="wide" id="btnDoc">⬇ 下载 .doc（可上传到 Google Docs）</button>
+      <button class="wide" id="btnHtml">⬇ 下载 .html</button>
+      <button class="wide" id="btnShots">🖼 导出全部截图为图片文件</button>
+      <div class="btnrow">
+        <button id="btnSave">保存项目</button>
+        <button id="btnLoad">载入项目</button>
+        <button class="danger" id="btnReset">清空</button>
+      </div>
+      <input type="file" id="fProj" accept=".json" hidden>
+      <div class="warn" style="margin-top:12px">
+        <b>Canva 说明：</b>Canva 导入 PDF 会把超链接压掉，只保留版面。要在 Canva 里保留链接，请勾选「附录：链接清单」，导入后按清单给文字重新挂链接；<b>需要链接原样保留时走 Google Docs 路线</b>。截图可用上面的「导出全部截图」拿到原图文件，再拖进 Canva。
+      </div>
+      <div class="tip" id="storeInfo"></div>
+    </div>
+  </aside>
+
+  <!-- ============ 画布 ============ -->
+  <main class="stage">
+    <div class="paper" id="paper"></div>
+  </main>
+</div>
+
+<div class="selbar" id="selbar">
+  <span>已选中：</span><b id="selName"></b>
+  <span class="sp"></span>
+  <span style="opacity:.75">Ctrl+V 粘贴截图 · 或把图片拖到卡片上</span>
+  <button id="selPick">选择图片</button>
+  <button id="selDel">删除截图</button>
+  <button id="selClose">✕</button>
+</div>
+<input type="file" id="selFile" accept="image/*" hidden>
+
+<!-- ============ 导入弹窗 ============ -->
+<div class="modal" id="modal">
+  <div class="box">
+    <h2>粘贴 Excel 表格</h2>
+    <p class="hint">
+      在 Excel / Google Sheets 里选中区域 <b>Ctrl+C</b>，然后点下面的框 <b>Ctrl+V</b>。<br>
+      支持三种链接来源：单独的「链接」列；或名称单元格本身带的超链接（自动识别，显示为「⟨列N的超链接⟩」）；两者都有时以映射为准。<br>
+      表里如果有「分组 / 板块」列，映射后会<b>一次性拆成多个分组</b>。
+    </p>
+    <textarea id="pasteBox" rows="5" placeholder="点这里，然后 Ctrl+V 粘贴…"></textarea>
+    <label style="margin-top:10px"><input type="checkbox" id="hasHeader" style="width:auto" checked> 第一行是表头</label>
+
+    <div class="maprow">
+      <div><label>名称（显示文字）*</label><select id="mName"></select></div>
+      <div><label>副标题（地区/备注）</label><select id="mSub"></select></div>
+      <div><label>链接 URL *</label><select id="mUrl"></select></div>
+      <div><label>图片 URL（Logo/截图）</label><select id="mImg"></select></div>
+      <div><label>分组（拆分依据）</label><select id="mGroup"></select></div>
+    </div>
+
+    <div class="row2">
+      <div><label>版式</label>
+        <select id="mLayout"></select>
+      </div>
+      <div><label>无分组列时，写入</label>
+        <select id="mTarget"></select>
+      </div>
+    </div>
+    <label style="margin-top:8px"><input type="checkbox" id="mAuto" style="width:auto" checked>
+      从 Logo 图库按链接域名自动补全<b>名称 / 地区 / Logo</b> <span class="count" id="libInfo"></span></label>
+
+    <div class="prev" id="prevBox" style="margin-top:12px"></div>
+    <div class="btnrow" style="justify-content:flex-end;margin-top:14px">
+      <button id="btnCancel">取消</button>
+      <button class="primary" id="btnDoImport">生成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 媒体 Logo 图库：由 extract_logos.py 从传播报告 PDF 生成；文件不存在时功能自动关闭 -->
+<script src="logos.js" onerror="window.LOGO_LIB=null"></script>
+<!-- 样例项目：由 build_sample.py 从报告 PDF 还原；文件不存在时用内置精简示例 -->
+<script src="sample.js" onerror="window.SAMPLE_REPORT=null"></script>
+<script>
+/* =========================================================
+   0. 图片仓库：IndexedDB（localStorage 放不下截图）
+   ========================================================= */
+const IDB = (()=>{
+  let dbp;
+  function db(){
+    if(!dbp) dbp = new Promise((res,rej)=>{
+      const r = indexedDB.open('pr-report-imgs',1);
+      r.onupgradeneeded = ()=> r.result.createObjectStore('imgs');
+      r.onsuccess = ()=> res(r.result);
+      r.onerror  = ()=> rej(r.error);
+    });
+    return dbp;
+  }
+  const run = (mode, fn) => db().then(d => new Promise((res,rej)=>{
+    const t = d.transaction('imgs', mode);
+    const rq = fn(t.objectStore('imgs'));
+    t.oncomplete = ()=> res(rq && rq.result);
+    t.onerror    = ()=> rej(t.error);
+  }));
+  return {
+    put: (k,v)=> run('readwrite', s=>s.put(v,k)),
+    del: (k)  => run('readwrite', s=>s.delete(k)),
+    all: ()   => db().then(d => new Promise((res,rej)=>{
+      const out = {};
+      const t = d.transaction('imgs','readonly');
+      const c = t.objectStore('imgs').openCursor();
+      c.onsuccess = e => { const cur = e.target.result; if(cur){ out[cur.key]=cur.value; cur.continue(); } else res(out); };
+      t.onerror = ()=> rej(t.error);
+    }))
+  };
+})();
+
+const IMG = {};                                   // id -> dataURL（内存缓存）
+const isRef  = r => typeof r==='string' && r.startsWith('idb:');
+const isLib  = r => typeof r==='string' && r.startsWith('lib:');
+const imgSrc = r => !r ? ''
+  : isRef(r) ? (IMG[r.slice(4)] || '')
+  : isLib(r) ? ((LOGOS.byKey.get(r.slice(4)) || LOGOS.byDomain.get(r.slice(4)))?.i || '')
+  : r;
+
+/* =========================================================
+   0b. 媒体 Logo 图库：域名 / 名称 → logo
+   ========================================================= */
+function domainOf(url){
+  const m = /^(?:https?:)?\/\/([^/?#]+)/i.exec((url||'').trim())
+         || /^([\w-]+(?:\.[\w-]+)+)/.exec((url||'').trim());
+  if(!m) return '';
+  return m[1].toLowerCase().split(':')[0].replace(/^(www\d?|m|amp|mobile|en)\./,'');
+}
+function registrable(host){
+  if(!host) return '';
+  const p = host.split('.');
+  if(p.length <= 2) return host;
+  if(['co','com','net','org','gov','edu','ac'].includes(p[p.length-2]) && p[p.length-1].length===2)
+    return p.slice(-3).join('.');
+  return p.slice(-2).join('.');
+}
+const normName = s => (s||'').toLowerCase().replace(/\.[a-z0-9]{2,4}$/,'').replace(/[^a-z0-9一-龥]+/g,'');
+
+const LOGOS = (()=>{
+  const list = Array.isArray(window.LOGO_LIB) ? window.LOGO_LIB : [];
+  const byKey = new Map(), byDomain = new Map(), byName = new Map();
+  list.forEach(e=>{
+    e.key = (e.d && e.d[0]) || normName(e.n);
+    byKey.set(e.key, e);
+    (e.d||[]).forEach(d=>{ if(!byDomain.has(d)) byDomain.set(d, e); });
+    const n = normName(e.n);
+    if(n && !byName.has(n)) byName.set(n, e);
+  });
+  return {
+    list, byKey, byDomain, byName,
+    count: list.length,
+    withLogo: list.filter(e=>e.i).length,
+    /** 先按域名（逐级去掉子域），再按名称 */
+    find(url, name){
+      const host = domainOf(url);
+      if(host){
+        if(byDomain.has(host)) return byDomain.get(host);
+        const parts = host.split('.');
+        for(let i=1;i<parts.length-1;i++){
+          const h = parts.slice(i).join('.');
+          if(byDomain.has(h)) return byDomain.get(h);
+        }
+        const r = registrable(host);
+        if(byDomain.has(r)) return byDomain.get(r);
+      }
+      const n = normName(name);
+      return (n && byName.get(n)) || null;
+    }
+  };
+})();
+
+/** 用图库补全条目：只填空位，不覆盖已有内容
+ *  注意 logo 与截图分属两个字段：r.logo = 品牌 logo，r.img = 页面截图，互不覆盖 */
+function enrich(r, force){
+  const e = LOGOS.find(r.url, r.name);
+  if(e){
+    if(!r.name || isUrl(r.name)) r.name = e.n;
+    if(!r.sub && e.s) r.sub = e.s;
+    if(e.i && (force || !r.logo)) r.logo = 'lib:' + e.key;
+  } else if(r.url && (!r.name || isUrl(r.name))){
+    r.name = registrable(domainOf(r.url)) || r.name;      // 图库里没有 → 至少显示域名
+  }
+  return r;
+}
+function enrichAll(force){
+  let hit = 0;
+  state.sections.forEach(s=>s.rows.forEach(r=>{
+    const before = r.logo;
+    enrich(r, force);
+    if(r.logo && r.logo !== before) hit++;
+  }));
+  return hit;
+}
+
+/** 压缩后存入 IDB，返回引用 idb:xxx */
+function shrink(file, maxW=1400, q=0.82){
+  return new Promise((res,rej)=>{
+    const fr = new FileReader();
+    fr.onload = ()=>{
+      const im = new Image();
+      im.onload = ()=>{
+        const sc = Math.min(1, maxW / im.naturalWidth);
+        const w = Math.max(1,Math.round(im.naturalWidth*sc));
+        const h = Math.max(1,Math.round(im.naturalHeight*sc));
+        const cv = document.createElement('canvas');
+        cv.width=w; cv.height=h;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);   // JPEG 无透明通道，先铺白底
+        ctx.drawImage(im,0,0,w,h);
+        res(cv.toDataURL('image/jpeg', q));
+      };
+      im.onerror = ()=>rej(new Error('图片解码失败'));
+      im.src = fr.result;
+    };
+    fr.onerror = ()=>rej(fr.error);
+    fr.readAsDataURL(file);
+  });
+}
+async function storeImg(file, maxW){
+  const url = await shrink(file, maxW);
+  const id  = 'im' + uid();
+  IMG[id] = url;
+  await IDB.put(id, url);
+  return 'idb:' + id;
+}
+function bytesOf(dataUrl){ return Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3/4); }
+function updateStoreInfo(){
+  const n = Object.keys(IMG).length;
+  const kb = Object.values(IMG).reduce((a,b)=>a+bytesOf(b),0)/1024;
+  document.getElementById('storeInfo').textContent =
+    `图片仓库：${n} 张 · ${kb>1024 ? (kb/1024).toFixed(1)+' MB' : Math.round(kb)+' KB'}（存于浏览器 IndexedDB，导入时已压到宽 1400px）`;
+
+  const info = LOGOS.count
+    ? `Logo 图库：${LOGOS.count} 家媒体 / ${LOGOS.withLogo} 张 logo。粘贴链接即按域名自动配图。`
+    : `尚无 Logo 图库。把传播报告 PDF 放进本文件夹，运行 <b>python extract_logos.py</b> 生成 logos.js 后刷新，即可实现「粘贴链接自动出图」。`;
+  document.getElementById('libTip').innerHTML = info;
+  const li = document.getElementById('libInfo');
+  if(li) li.textContent = LOGOS.count ? `（图库 ${LOGOS.count} 家）` : '（图库为空）';
+}
+
+/* =========================================================
+   1. 状态
+   ========================================================= */
+const LS_KEY = 'pr-link-report-v2';
+let state = defaultState();
+let importData = null;
+let selected = null;      // {sid, idx}
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function defaultState(){
+  return {
+    brand:'ETB STARR CONSULTING',
+    tagline:'Brand Communications & Media Advisory',
+    logo:'', cover:'', coverCap:'',
+    title:'新闻稿发布传播报告',
+    subtitle:'Distributed on ' + new Date().toISOString().slice(0,10),
+    intro:'以下为本次新闻稿的媒体转载与收录情况。点击各条目名称即可跳转至对应报道页面。',
+    footer:'contact@starrconsulting.com',
+    navy:'#1b2a4e', accent:'#e2245e',
+    toc:true, linkIndex:false,
+    sections:[]
+  };
+}
+
+/* =========================================================
+   2. 解析：TSV / CSV / Excel 的 text/html（含单元格超链接）
+   ========================================================= */
+function parseHtmlTable(html){
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const table = doc.querySelector('table');
+  if(!table) return null;
+  const trs = [...table.querySelectorAll('tr')];
+  if(!trs.length) return null;
+  const rows = [], links = [];
+  for(const tr of trs){
+    const cells = [...tr.querySelectorAll('th,td')];
+    if(!cells.length) continue;
+    rows.push(cells.map(c => (c.textContent||'').replace(/\s+/g,' ').trim()));
+    links.push(cells.map(c => {
+      const a = c.querySelector('a[href]');
+      const h = a ? a.getAttribute('href') : '';
+      return (h && !/^#|^javascript:/i.test(h)) ? h : '';
+    }));
+  }
+  return {rows, links};
+}
+
+function parseDelimited(text){
+  const t = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim();
+  if(!t) return [];
+  const delim = (t.split('\n')[0].includes('\t')) ? '\t' : ',';
+  const rows=[]; let row=[], cell='', q=false;
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(q){
+      if(c==='"'){ if(t[i+1]==='"'){cell+='"';i++;} else q=false; }
+      else cell+=c;
+    } else if(c==='"'){ q=true; }
+    else if(c===delim){ row.push(cell); cell=''; }
+    else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
+    else cell+=c;
+  }
+  row.push(cell); rows.push(row);
+  return rows.map(r=>r.map(c=>c.trim())).filter(r=>r.some(c=>c!==''));
+}
+
+function buildImportData(rows, links, hasHeader){
+  if(!rows || !rows.length) return null;
+  const width = Math.max(...rows.map(r=>r.length));
+  rows = rows.map(r => { const c=r.slice(); while(c.length<width) c.push(''); return c; });
+
+  let linkCols = [];
+  if(links){
+    links = links.map(r => { const c=r.slice(); while(c.length<width) c.push(''); return c; });
+    const start = hasHeader ? 1 : 0;
+    for(let c=0;c<width;c++) if(links.slice(start).some(r=>r[c])) linkCols.push(c);
+  }
+
+  let headers;
+  if(hasHeader){
+    headers = rows[0].map((h,i)=> h || ('列'+(i+1)));
+    rows = rows.slice(1);
+    if(links) links = links.slice(1);
+  } else {
+    headers = Array.from({length:width},(_,i)=>'列'+(i+1));
+  }
+
+  linkCols.forEach(c=>{
+    headers.push('⟨'+headers[c]+' 的超链接⟩');
+    rows.forEach((r,ri)=> r.push(links[ri] ? (links[ri][c]||'') : ''));
+  });
+
+  return {headers, rows};
+}
+
+/* =========================================================
+   3. 列自动映射
+   ========================================================= */
+const isUrl = s => /^(https?:\/\/|www\.)\S+$/i.test((s||'').trim());
+function guessMap(d){
+  const {headers, rows} = d;
+  const sample = rows.slice(0,20);
+  const score = kw => headers.findIndex(h => kw.some(k=>h.toLowerCase().includes(k)));
+  const urlByHeader = score(['url','link','链接','网址','超链接']);
+  const urlByData   = headers.findIndex((_,c)=> sample.filter(r=>isUrl(r[c])).length > sample.length*0.6);
+  const nameIdx = score(['name','媒体','名称','标题','outlet','publisher','title']);
+  return {
+    name: nameIdx >= 0 ? nameIdx : 0,
+    sub:  score(['地区','城市','location','city','state','备注','说明','sub','市场']),
+    url:  urlByHeader >= 0 ? urlByHeader : urlByData,
+    img:  score(['logo','图片','image','icon','截图','screenshot','缩略']),
+    group:score(['分组','板块','类别','分类','section','group','category','channel','渠道'])
+  };
+}
+
+/* =========================================================
+   4. 渲染文档
+   ========================================================= */
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function normUrl(u){
+  u = (u||'').trim();
+  if(!u) return '';
+  if(/^(https?:|mailto:|#)/i.test(u)) return u;
+  return 'https://' + u.replace(/^\/+/,'');
+}
+const SHOT_LAYOUTS = ['s1','s2','s3'];
+const TILE_LAYOUTS = ['t2','t3','t4'];
+const isShot = l => SHOT_LAYOUTS.includes(l);
+const isTile = l => TILE_LAYOUTS.includes(l);
+
+function rowHtml(sid, i, r, layout){
+  const url = normUrl(r.url);
+  const bind = `data-sid="${sid}" data-idx="${i}"`;
+  const nameEl = url
+    ? `<a href="${esc(url)}" ${bind} data-f="name" contenteditable="true">${esc(r.name)}</a>`
+    : `<span ${bind} data-f="name" contenteditable="true" style="font-weight:700;color:#111827;font-size:12.5px">${esc(r.name)}</span>`;
+  const subEl = r.sub ? `<div class="sub" ${bind} data-f="sub" contenteditable="true">${esc(r.sub)}</div>` : '';
+  const logo = imgSrc(r.logo);          // 品牌 logo（图库/图片列）
+  const shot = imgSrc(r.img);           // 页面截图（拖入/粘贴/批量）
+  const src  = shot || logo;
+
+  if(isTile(layout)){
+    const inner = logo
+      ? `<img src="${esc(logo)}" alt="${esc(r.name)}" title="${esc(r.name)}">`
+      : `<span class="nm" ${bind} data-f="name" contenteditable="true">${esc(r.name)}</span>`;
+    return `<div class="tile" ${bind}>${
+      url && logo ? `<a href="${esc(url)}" style="display:flex;align-items:center;justify-content:center;width:100%">${inner}</a>`
+                  : (url ? `<a href="${esc(url)}" ${bind} data-f="name" contenteditable="true">${esc(r.name)}</a>` : inner)
+    }</div>`;
+  }
+  if(isShot(layout)){
+    // 没有截图时用 logo 顶上，但必须完整显示 + 留白，不能像截图那样裁切铺满
+    const frame = src
+      ? `<span class="frame${shot?'':' logo-bg'}"><img class="${shot?'':'as-logo'}" src="${esc(src)}" alt=""></span>`
+      : `<span class="frame empty noprint">拖入图片 / 点击后 Ctrl+V</span>`;
+    const inner = url ? `<a href="${esc(url)}" style="display:block">${frame}</a>` : frame;
+    return `<figure class="shot" ${bind}>${inner}<figcaption>${nameEl}${subEl}</figcaption></figure>`;
+  }
+  if(layout==='list')  return `<li ${bind}>${nameEl}${r.sub?` <span class="sub" ${bind} data-f="sub" contenteditable="true">— ${esc(r.sub)}</span>`:''}</li>`;
+  if(layout==='chips') return `<span class="chip" ${bind}>${nameEl}</span>`;
+  if(layout==='table') return `<tr ${bind}><td>${nameEl}</td><td ${bind} data-f="sub" contenteditable="true">${esc(r.sub||'')}</td>`
+    + `<td style="width:34%">${src?`<img src="${esc(src)}" alt="" style="${shot?'':'max-height:34px'}">`:''}</td>`
+    + `<td style="word-break:break-all;font-size:11px">${url?`<a href="${esc(url)}">${esc(url)}</a>`:''}</td></tr>`;
+
+  const center = (layout==='c4' && !r.sub && !logo) ? ' center' : '';
+  return `<div class="card${center}" ${bind}><div class="txt">${nameEl}${subEl}</div>${logo?`<img class="logo" src="${esc(logo)}" alt="">`:''}</div>`;
+}
+
+/* 区块类型：links=链接卡片 / directory=媒体名录 / social=分享行 / summary=报告摘要 */
+function sectionHtml(s){
+  const bar  = `<div class="sec-bar" data-sid="${s.id}" data-f="title" contenteditable="true">${esc(s.title)}</div>`;
+  const desc = s.desc ? `<p class="sec-desc" data-sid="${s.id}" data-f="desc" contenteditable="true">${esc(s.desc)}</p>` : '';
+  const wrap = body => `<div class="section" id="sec-${s.id}" data-sec="${s.id}">${bar}${desc}${body}</div>`;
+  if(s.type === 'directory') return wrap(directoryHtml(s));
+  if(s.type === 'social')    return wrap(socialHtml(s));
+  if(s.type === 'summary')   return wrap(summaryHtml(s));
+  return linksSectionHtml(s, wrap);
+}
+
+function directoryHtml(s){
+  return (s.regions||[]).map(g=>`<div class="dir-box">
+    <div class="dir-head">${g.flag?`<span class="flag">${esc(g.flag)}</span>`:''}${
+      g.url ? `<a href="${esc(normUrl(g.url))}">${esc(g.name)}</a>` : esc(g.name)}</div>
+    ${g.count ? `<div class="dir-count">${esc(g.count)}</div>` : ''}
+    <div class="dir-names">${(g.names||[]).map(n=>`<span>${esc(n)}</span>`).join('')}</div>
+  </div>`).join('');
+}
+
+function socialHtml(s){
+  return `<div class="social">${s.rows.filter(r=>r.name).map(r=>
+    `<a href="${esc(normUrl(r.url)||'#')}">${esc(r.name)}</a>`).join('')}</div>`;
+}
+
+function summaryHtml(s){
+  const f = s.summary || {};
+  const li = (arr, fn) => (arr||[]).length ? `<ul>${arr.map(fn).join('')}</ul>` : '<p class="muted">—</p>';
+  const fig = (f.images||[]).map(im=>{
+    const src = imgSrc(im.img);
+    return `<div class="sum-fig">${src?`<img src="${esc(src)}" alt="">`:''}<div class="meta">
+      <b>Name:</b> ${esc(im.name||'')}<br><b>Caption:</b> ${esc(im.caption||'')}
+      ${im.url?`<br><a href="${esc(normUrl(im.url))}">Full-size Image</a>`:''}</div></div>`;
+  }).join('');
+  return `<div class="summary">
+    <div>
+      <h4>Title: ${esc(f.titleStat||'')}</h4>
+      <p>${esc(f.titleText||'')}</p>
+      <h4>Text: ${esc(f.textStat||'')}</h4>
+      <p>${esc(f.textExcerpt||'')}</p>
+      <h4>Keyword Anchor Text Links: ${(f.anchors||[]).length} link${(f.anchors||[]).length===1?'':'s'}</h4>
+      ${li(f.anchors, a=>`<li>${esc(a.text||'')}${a.url?` - <a href="${esc(normUrl(a.url))}">${esc(a.url)}</a>`:''}</li>`)}
+    </div>
+    <div>
+      <h4>Other Links: ${(f.others||[]).length} link${(f.others||[]).length===1?'':'s'}</h4>
+      ${li(f.others, u=>`<li><a href="${esc(normUrl(u))}">${esc(u)}</a></li>`)}
+      <h4>Embedded Images: ${(f.images||[]).length} image${(f.images||[]).length===1?'':'s'}</h4>
+      ${fig || '<p class="muted">—</p>'}
+      <h4>Embedded Videos: ${f.videos||0} video${(f.videos||0)===1?'':'s'}</h4>
+    </div>
+  </div>`;
+}
+
+function linksSectionHtml(s, wrap){
+  const rows = s.rows.filter(r=>r.name || r.url || r.img || r.logo);
+  let body='';
+  if(isTile(s.layout))        body = `<div class="tiles ${s.layout}">${rows.map((r,i)=>rowHtml(s.id,i,r,s.layout)).join('')}</div>`;
+  else if(s.layout==='list')  body = `<ul class="linklist">${rows.map((r,i)=>rowHtml(s.id,i,r,'list')).join('')}</ul>`;
+  else if(s.layout==='chips') body = `<div class="chips">${rows.map((r,i)=>rowHtml(s.id,i,r,'chips')).join('')}</div>`;
+  else if(s.layout==='table') body = `<table class="tbl"><thead><tr><th>名称</th><th>说明</th><th>截图</th><th>链接</th></tr></thead><tbody>${rows.map((r,i)=>rowHtml(s.id,i,r,'table')).join('')}</tbody></table>`;
+  else                        body = `<div class="cards ${s.layout}">${rows.map((r,i)=>rowHtml(s.id,i,r,s.layout)).join('')}</div>`;
+
+  const heroSrc = imgSrc(s.hero);
+  const hero = heroSrc ? `<figure class="sec-hero"><img src="${esc(heroSrc)}" alt="">${
+      s.heroCap ? `<figcaption class="figcap" data-sid="${s.id}" data-f="heroCap" contenteditable="true">${esc(s.heroCap)}</figcaption>` : ''
+    }</figure>` : '';
+  return wrap(hero + body);
+}
+
+const totalLinks = () => state.sections.reduce((n,s)=> n + s.rows.filter(r=>normUrl(r.url)).length, 0);
+const totalShots = () => state.sections.reduce((n,s)=> n + s.rows.filter(r=>r.img).length, 0)
+                       + state.sections.filter(s=>s.hero).length + (state.cover?1:0);
+const totalLogos = () => state.sections.reduce((n,s)=> n + s.rows.filter(r=>r.logo).length, 0);
+
+function render(){
+  document.documentElement.style.setProperty('--navy', state.navy);
+  document.documentElement.style.setProperty('--accent', state.accent);
+
+  const toc = state.toc && state.sections.length ? `<div class="toc">
+      <h3>目录 Contents</h3>
+      <ol>${state.sections.map(s=>`<li><a href="#sec-${s.id}">${esc(s.title)}</a></li>`).join('')}</ol>
+    </div>` : '';
+
+  const coverSrc = imgSrc(state.cover);
+  const cover = coverSrc ? `<figure class="doc-cover"><img src="${esc(coverSrc)}" alt="">${
+      state.coverCap ? `<figcaption class="figcap" data-f="coverCap" contenteditable="true">${esc(state.coverCap)}</figcaption>` : ''
+    }</figure>` : '';
+
+  const idx = state.linkIndex ? `<div class="section">
+      <div class="sec-bar">附录：链接清单 Link Index</div>
+      <table class="tbl"><thead><tr><th style="width:26%">名称</th><th>URL</th></tr></thead><tbody>
+      ${state.sections.flatMap(s=>s.rows.filter(r=>normUrl(r.url)).map(r=>
+        `<tr><td>${esc(r.name)}</td><td style="word-break:break-all;font-size:11px"><a href="${esc(normUrl(r.url))}">${esc(normUrl(r.url))}</a></td></tr>`)).join('')}
+      </tbody></table></div>` : '';
+
+  document.getElementById('paper').innerHTML = `
+    <div class="doc-head">
+      ${imgSrc(state.logo) ? `<img src="${esc(imgSrc(state.logo))}" alt="">` : ''}
+      <div class="brand">${esc(state.brand)}<small>${esc(state.tagline)}</small></div>
+    </div>
+    <h1 class="doc-title" data-f="title" contenteditable="true">${esc(state.title)}</h1>
+    <p class="doc-sub" data-f="subtitle" contenteditable="true">${esc(state.subtitle)}</p>
+    ${state.intro ? `<p class="doc-intro" data-f="intro" contenteditable="true">${esc(state.intro)}</p>` : ''}
+    ${cover}
+    ${toc}
+    ${state.sections.map(sectionHtml).join('')}
+    ${idx}
+    <div class="doc-foot"><span>${esc(state.footer)}</span><span>共 ${totalLinks()} 条链接 · ${totalLogos()} 个 logo · ${totalShots()} 张图 · ${state.sections.length} 个分组</span></div>`;
+
+  markSelection();
+  renderPanel();
+  updateStoreInfo();
+  save();
+}
+
+/* 就地编辑写回（不重绘，避免光标丢失） */
+document.addEventListener('input', e=>{
+  const el = e.target.closest('[contenteditable][data-f]');
+  if(!el || !document.getElementById('paper').contains(el)) return;
+  const f = el.dataset.f, sid = el.dataset.sid, idx = el.dataset.idx;
+  const v = el.textContent.replace(/^—\s*/,'').trim();
+  if(sid && idx !== undefined){
+    const s = state.sections.find(x=>x.id===sid);
+    if(s && s.rows[+idx]) s.rows[+idx][f] = v;
+  } else if(sid){
+    const s = state.sections.find(x=>x.id===sid);
+    if(s) s[f] = v;
+  } else {
+    state[f] = v;
+    const map = {title:'fTitle', subtitle:'fSubtitle', intro:'fIntro', coverCap:'fCoverCap'};
+    if(map[f]) document.getElementById(map[f]).value = v;
+  }
+  save();
+});
+
+/* =========================================================
+   5. 选中 / 拖放 / 粘贴截图
+   ========================================================= */
+const paper = document.getElementById('paper');
+const selbar = document.getElementById('selbar');
+
+function rowOf(sel){
+  if(!sel) return null;
+  const s = state.sections.find(x=>x.id===sel.sid);
+  return s ? s.rows[sel.idx] : null;
+}
+function markSelection(){
+  paper.querySelectorAll('.sel-row').forEach(n=>n.classList.remove('sel-row'));
+  const r = rowOf(selected);
+  if(!r){ selbar.classList.remove('on'); return; }
+  const el = paper.querySelector(`[data-sid="${selected.sid}"][data-idx="${selected.idx}"]`);
+  const box = el ? (el.closest('.shot,.card,.tile,.chip,tr,li') || el) : null;
+  if(box) box.classList.add('sel-row');
+  document.getElementById('selName').textContent = r.name || '(未命名)';
+  selbar.classList.add('on');
+}
+
+paper.addEventListener('click', e=>{
+  const a = e.target.closest('a');
+  if(a && !(e.ctrlKey || e.metaKey)) e.preventDefault();   // 普通点击=编辑，Ctrl+点击=跳转
+  const el = e.target.closest('[data-sid][data-idx]');
+  if(el){
+    selected = {sid: el.dataset.sid, idx: +el.dataset.idx};
+    markSelection();
+    const item = document.querySelector(`.sec-item[data-sid="${el.dataset.sid}"]`);
+    if(item && !item.classList.contains('open')){
+      document.querySelectorAll('.sec-item').forEach(n=>n.classList.remove('open'));
+      item.classList.add('open');
+    }
+  }
+});
+
+document.getElementById('selClose').onclick = ()=>{ selected=null; markSelection(); };
+document.getElementById('selPick').onclick  = ()=> document.getElementById('selFile').click();
+document.getElementById('selFile').onchange = async e=>{
+  const f = e.target.files[0]; e.target.value='';
+  const r = rowOf(selected);
+  if(f && r){ r.img = await storeImg(f); render(); }
+};
+document.getElementById('selDel').onclick = ()=>{
+  const r = rowOf(selected);
+  if(r){ r.img=''; render(); }
+};
+
+/* 拖放：拖到卡片 = 单张；拖到分组空白 = 批量按顺序填充 */
+paper.addEventListener('dragover', e=>{
+  if(!e.dataTransfer || ![...e.dataTransfer.types].includes('Files')) return;
+  e.preventDefault();
+  const t = e.target.closest('[data-sid][data-idx]') || e.target.closest('[data-sec]');
+  paper.querySelectorAll('.drop').forEach(n=>n.classList.remove('drop'));
+  if(t) (t.closest('.shot,.card,.tile,.chip,tr,li') || t).classList.add('drop');
+});
+paper.addEventListener('dragleave', ()=> paper.querySelectorAll('.drop').forEach(n=>n.classList.remove('drop')));
+paper.addEventListener('drop', async e=>{
+  const files = [...(e.dataTransfer?.files||[])].filter(f=>f.type.startsWith('image/'));
+  if(!files.length) return;
+  e.preventDefault();
+  paper.querySelectorAll('.drop').forEach(n=>n.classList.remove('drop'));
+
+  const cell = e.target.closest('[data-sid][data-idx]');
+  if(cell){
+    const s = state.sections.find(x=>x.id===cell.dataset.sid);
+    let i = +cell.dataset.idx;
+    for(const f of files){                       // 多张 → 从该条目起依次填
+      if(!s.rows[i]) break;
+      s.rows[i].img = await storeImg(f);
+      i++;
+    }
+    render(); return;
+  }
+  const secEl = e.target.closest('[data-sec]');
+  if(secEl){
+    const s = state.sections.find(x=>x.id===secEl.dataset.sec);
+    await assignByName(s, files);
+    render();
+  }
+});
+
+/* Ctrl+V 把剪贴板截图贴到选中条目 */
+document.addEventListener('paste', async e=>{
+  if(document.getElementById('modal').classList.contains('on')) return;
+  if(e.target.closest('.panel')) return;
+  const item = [...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));
+  if(!item) return;
+  const r = rowOf(selected);
+  if(!r){ alert('先在右侧点一下要配图的条目，再 Ctrl+V。'); return; }
+  e.preventDefault();
+  r.img = await storeImg(item.getAsFile());
+  render();
+});
+
+/* 按文件名匹配条目（normName 见 0b 节） */
+async function assignByName(s, files){
+  const used = new Set();
+  const pending = [];
+  for(const f of files){
+    const key = normName(f.name);
+    let i = s.rows.findIndex((r,ix)=> !used.has(ix) && normName(r.name) === key);
+    if(i < 0) i = s.rows.findIndex((r,ix)=> !used.has(ix) && key && normName(r.name) && (key.includes(normName(r.name)) || normName(r.name).includes(key)));
+    if(i < 0){
+      const m = f.name.match(/^(\d{1,3})[^\d]/);                  // 01_xxx.png → 第 1 条
+      if(m){ const k = +m[1]-1; if(k>=0 && k<s.rows.length && !used.has(k)) i = k; }
+    }
+    if(i >= 0){ used.add(i); s.rows[i].img = await storeImg(f); }
+    else pending.push(f);
+  }
+  for(const f of pending){                                        // 剩下的按顺序补空位
+    const i = s.rows.findIndex((r,ix)=> !used.has(ix) && !r.img);
+    if(i < 0) break;
+    used.add(i); s.rows[i].img = await storeImg(f);
+  }
+  return {matched: used.size, total: files.length};
+}
+
+/* =========================================================
+   6. 左侧分组面板
+   ========================================================= */
+const LAYOUT_LABELS = {
+  c1:'卡片 · 1 列', c2:'卡片 · 2 列（名称+地区+logo）', c3:'卡片 · 3 列', c4:'卡片 · 4 列',
+  t4:'品牌方块 · 4 列（logo 居中）', t3:'品牌方块 · 3 列', t2:'品牌方块 · 2 列',
+  s1:'截图 · 大图 1 列', s2:'截图 · 2 列', s3:'截图 · 3 列',
+  list:'链接列表 · 3 列', chips:'圆角标签', table:'表格（含截图列）'
+};
+document.getElementById('mLayout').innerHTML =
+  Object.entries(LAYOUT_LABELS).map(([k,v])=>`<option value="${k}" ${k==='c2'?'selected':''}>${v}</option>`).join('');
+
+function renderPanel(){
+  document.getElementById('secCount').textContent = `（${state.sections.length} 组 / ${totalLinks()} 链接 / ${totalLogos()} logo / ${totalShots()} 截图）`;
+  const open = [...document.querySelectorAll('.sec-item.open')].map(n=>n.dataset.sid);
+  document.getElementById('secList').innerHTML = state.sections.map((s,i)=>`
+    <div class="sec-item ${open.includes(s.id)?'open':''}" data-sid="${s.id}">
+      <div class="head">
+        <strong>${esc(s.title)}</strong>
+        <span class="count">${s.rows.length}${s.rows.some(r=>r.logo)?' ⬢':''}${s.rows.some(r=>r.img)?' 🖼':''}</span>
+        <button data-act="up" ${i===0?'disabled':''}>↑</button>
+        <button data-act="down" ${i===state.sections.length-1?'disabled':''}>↓</button>
+        <button data-act="toggle">✎</button>
+        <button data-act="del" class="danger">✕</button>
+      </div>
+      <div class="sec-body">
+        <label>标题</label><input type="text" data-act="title" value="${esc(s.title)}">
+        <label>说明文字</label><textarea data-act="desc" rows="2">${esc(s.desc||'')}</textarea>
+        ${s.type && s.type!=='links' ? typeBodyHtml(s) : `
+        <label>版式</label>
+        <select data-act="layout">${Object.entries(LAYOUT_LABELS).map(([k,v])=>`<option value="${k}" ${s.layout===k?'selected':''}>${v}</option>`).join('')}</select>
+
+        <div class="btnrow">
+          <button data-act="match" style="font-size:12px;padding:4px 9px">🔎 本组匹配 Logo</button>
+          <button data-act="logoDel" style="font-size:12px;padding:4px 9px">清空本组 Logo</button>
+        </div>
+
+        <p class="sub-h">🖼 截图</p>
+        <label>批量添加（可多选，按文件名自动匹配条目）</label>
+        <input type="file" data-act="shots" accept="image/*" multiple>
+        <label>本组大图 / 头图</label>
+        <input type="file" data-act="hero" accept="image/*">
+        <input type="text" data-act="heroCap" placeholder="大图说明文字" value="${esc(s.heroCap||'')}" style="margin-top:6px">
+        <div class="btnrow">
+          <button data-act="heroDel" style="font-size:12px;padding:4px 9px">移除大图</button>
+          <button data-act="shotsDel" style="font-size:12px;padding:4px 9px">清空本组截图</button>
+        </div>
+
+        <label style="margin-top:12px">条目（每行：名称 ⇥ 副标题 ⇥ 链接，可直接从 Excel 粘贴覆盖）</label>
+        <textarea data-act="rows" rows="6">${esc(s.rows.map(r=>[r.name,r.sub||'',r.url||''].join('\t')).join('\n'))}</textarea>`}
+      </div>
+    </div>`).join('');
+}
+
+/* 非链接类区块的编辑界面 */
+function typeBodyHtml(s){
+  if(s.type === 'directory'){
+    const txt = (s.regions||[]).map(g=>
+      `${g.flag||''} ${g.name||''} ## ${g.count||''} ## ${g.url||''}\n${(g.names||[]).join('\n')}`
+    ).join('\n---\n');
+    return `<label>各地区名录（首行格式：<b>旗帜 地区名 ## 目标数说明 ## 链接</b>，其下每行一家媒体；地区之间用 <b>---</b> 分隔）</label>
+      <textarea data-act="regions" rows="12">${esc(txt)}</textarea>`;
+  }
+  if(s.type === 'social'){
+    return `<label>分享入口（每行：名称 ⇥ 链接）</label>
+      <textarea data-act="rows" rows="5">${esc(s.rows.map(r=>[r.name,r.url||''].join('\t')).join('\n'))}</textarea>`;
+  }
+  if(s.type === 'summary'){
+    const f = s.summary || {};
+    return `<label>标题统计</label><input type="text" data-act="sum.titleStat" value="${esc(f.titleStat||'')}" placeholder="15 words, 93 characters">
+      <label>标题原文</label><textarea data-act="sum.titleText" rows="2">${esc(f.titleText||'')}</textarea>
+      <label>正文统计</label><input type="text" data-act="sum.textStat" value="${esc(f.textStat||'')}" placeholder="820 words, 6094 characters">
+      <label>正文摘录</label><textarea data-act="sum.textExcerpt" rows="4">${esc(f.textExcerpt||'')}</textarea>
+      <label>关键词锚文本链接（每行：文字 ⇥ 链接）</label>
+      <textarea data-act="sum.anchors" rows="3">${esc((f.anchors||[]).map(a=>[a.text,a.url].join('\t')).join('\n'))}</textarea>
+      <label>其他链接（每行一条）</label>
+      <textarea data-act="sum.others" rows="3">${esc((f.others||[]).join('\n'))}</textarea>
+      <label>嵌入图片（每行：名称 ⇥ 图说 ⇥ 原图链接）</label>
+      <textarea data-act="sum.images" rows="3">${esc((f.images||[]).map(i=>[i.name,i.caption,i.url||''].join('\t')).join('\n'))}</textarea>
+      <input type="file" data-act="sumImgs" accept="image/*" multiple style="margin-top:6px">
+      <label>嵌入视频数</label><input type="text" data-act="sum.videos" value="${esc(String(f.videos||0))}">`;
+  }
+  return '';
+}
+
+document.getElementById('secList').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-act]'); if(!btn) return;
+  const item = btn.closest('.sec-item'), sid = item.dataset.sid;
+  const i = state.sections.findIndex(s=>s.id===sid);
+  const s = state.sections[i];
+  switch(btn.dataset.act){
+    case 'toggle': item.classList.toggle('open'); return;
+    case 'del': if(confirm('删除该分组？')){ state.sections.splice(i,1); selected=null; render(); } return;
+    case 'up':   if(i>0){ state.sections.splice(i-1,0,state.sections.splice(i,1)[0]); render(); } return;
+    case 'down': if(i<state.sections.length-1){ state.sections.splice(i+1,0,state.sections.splice(i,1)[0]); render(); } return;
+    case 'heroDel':  s.hero=''; render(); return;
+    case 'shotsDel': if(confirm('清空本组所有条目截图？（logo 保留）')){ s.rows.forEach(r=>r.img=''); render(); } return;
+    case 'logoDel':  s.rows.forEach(r=>r.logo=''); render(); return;
+    case 'match': {
+      if(!LOGOS.count){ alert('还没有 Logo 图库。请先按侧栏提示运行 extract_logos.py 生成 logos.js。'); return; }
+      let hit = 0;
+      s.rows.forEach(r=>{ const b=r.logo, n=r.name; enrich(r, true); if(r.logo!==b || r.name!==n) hit++; });
+      render();
+      alert(`本组 ${s.rows.length} 条，匹配上 ${hit} 条。`);
+      return;
+    }
+  }
+});
+
+document.getElementById('secList').addEventListener('change', async e=>{
+  const el = e.target.closest('input[type=file][data-act]'); if(!el) return;
+  const s = state.sections.find(x=>x.id === el.closest('.sec-item').dataset.sid);
+  const files = [...el.files]; el.value='';
+  if(!files.length || !s) return;
+  if(el.dataset.act === 'sumImgs'){
+    const f = s.summary = s.summary || {};
+    f.images = f.images || [];
+    for(let i=0;i<files.length;i++){
+      f.images[i] = f.images[i] || {name:files[i].name.replace(/\.[^.]+$/,''), caption:'', url:''};
+      f.images[i].img = await storeImg(files[i], 900);
+    }
+  } else if(el.dataset.act === 'hero'){
+    s.hero = await storeImg(files[0], 1600);
+    if(!s.heroCap) s.heroCap = '';
+  } else {
+    const {matched,total} = await assignByName(s, files.filter(f=>f.type.startsWith('image/')));
+    if(!isShot(s.layout) && confirm(`已匹配 ${matched}/${total} 张。是否把本组切换为「截图 · 2 列」版式以显示大图？`)) s.layout='s2';
+  }
+  render();
+});
+
+document.getElementById('secList').addEventListener('input', e=>{
+  const el = e.target.closest('[data-act]');
+  if(!el || el.tagName==='BUTTON' || el.type==='file') return;
+  const sid = el.closest('.sec-item').dataset.sid;
+  const s = state.sections.find(x=>x.id===sid); if(!s) return;
+  const act = el.dataset.act;
+  if(act==='regions'){
+    s.regions = el.value.split(/\n-{3,}\n/).map(blk=>{
+      const lines = blk.split('\n').map(x=>x.trim()).filter(Boolean);
+      if(!lines.length) return null;
+      const [head, count, url] = lines[0].split('##').map(x=>(x||'').trim());
+      const m = /^(\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]{2})\s*(.*)$/u.exec(head||'');
+      return {flag: m?m[1]:'', name: m?m[2]:(head||''), count: count||'', url: url||'', names: lines.slice(1)};
+    }).filter(Boolean);
+  } else if(act.startsWith('sum.')){
+    const f = s.summary = s.summary || {};
+    const k = act.slice(4), v = el.value;
+    if(k==='anchors')      f.anchors = parseDelimited(v).map(c=>({text:c[0]||'', url:c[1]||''}));
+    else if(k==='others')  f.others  = v.split('\n').map(x=>x.trim()).filter(Boolean);
+    else if(k==='images')  f.images  = parseDelimited(v).map((c,i)=>({
+                             name:c[0]||'', caption:c[1]||'', url:c[2]||'',
+                             img:(f.images&&f.images[i]&&f.images[i].img)||'' }));
+    else if(k==='videos')  f.videos  = parseInt(v,10) || 0;
+    else                   f[k] = v;
+  } else if(act==='rows' && s.type==='social'){
+    s.rows = parseDelimited(el.value).map(c=>({name:c[0]||'', sub:'', url:c[1]||'', img:'', logo:''}));
+  } else if(act==='rows'){
+    const old = s.rows;
+    s.rows = parseDelimited(el.value).map((c,i)=>{
+      const r = {
+        name:c[0]||'', sub:c[1]||'', url:c[2]||'',
+        img :(old[i]&&old[i].img )||'',       // 保留已配好的截图
+        logo:(old[i]&&old[i].logo)||''        // 和 logo
+      };
+      if(!r.url && isUrl(r.name)) r.url = r.name;
+      return enrich(r);                        // 只填空位
+    });
+  } else s[act] = el.value;
+  render();
+  const it = document.querySelector(`.sec-item[data-sid="${sid}"]`);
+  if(it){ it.classList.add('open'); const same = it.querySelector(`[data-act="${act}"]`); if(same && act!=='rows') same.focus(); }
+});
+
+/* Excel 直接粘贴进条目框：把带超链接的 HTML 转成 TSV */
+document.getElementById('secList').addEventListener('paste', e=>{
+  const ta = e.target.closest('textarea[data-act="rows"]'); if(!ta) return;
+  const html = e.clipboardData.getData('text/html'); if(!html) return;
+  const p = parseHtmlTable(html); if(!p) return;
+  const d = buildImportData(p.rows, p.links, false); if(!d) return;
+  const m = guessMap(d);
+  e.preventDefault();
+  ta.value = d.rows.map(r=>[r[m.name]||'', m.sub>=0?(r[m.sub]||''):'', m.url>=0?(r[m.url]||''):''].join('\t')).join('\n');
+  ta.dispatchEvent(new Event('input',{bubbles:true}));
+});
+
+/* =========================================================
+   7. 顶部字段
+   ========================================================= */
+const FIELDS = {fBrand:'brand',fTagline:'tagline',fTitle:'title',fSubtitle:'subtitle',fIntro:'intro',fFooter:'footer',fNavy:'navy',fAccent:'accent',fCoverCap:'coverCap'};
+Object.entries(FIELDS).forEach(([id,key])=>{
+  document.getElementById(id).addEventListener('input', e=>{ state[key]=e.target.value; render(); });
+});
+['fToc','fIndex'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', e=>{
+    state[id==='fToc'?'toc':'linkIndex'] = e.target.checked; render();
+  });
+});
+document.getElementById('fLogo').addEventListener('change', async e=>{
+  const f = e.target.files[0]; e.target.value='';
+  if(f){ state.logo = await storeImg(f, 600); render(); }
+});
+document.getElementById('fCover').addEventListener('change', async e=>{
+  const f = e.target.files[0]; e.target.value='';
+  if(f){ state.cover = await storeImg(f, 1600); render(); }
+});
+document.getElementById('btnCoverDel').onclick = ()=>{ state.cover=''; render(); };
+
+function syncFields(){
+  Object.entries(FIELDS).forEach(([id,key]) => document.getElementById(id).value = state[key]||'');
+  document.getElementById('fToc').checked = !!state.toc;
+  document.getElementById('fIndex').checked = !!state.linkIndex;
+}
+
+/* =========================================================
+   8. 导入弹窗
+   ========================================================= */
+const modal = document.getElementById('modal');
+const $ = id => document.getElementById(id);
+
+$('btnImport').onclick = ()=>{ modal.classList.add('on'); $('pasteBox').value=''; delete $('pasteBox').dataset.html; importData=null; $('prevBox').innerHTML=''; fillSelects(); setTimeout(()=>$('pasteBox').focus(),50); };
+$('btnCancel').onclick = ()=> modal.classList.remove('on');
+modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('on'); });
+
+$('pasteBox').addEventListener('paste', e=>{
+  const html = e.clipboardData.getData('text/html');
+  const text = e.clipboardData.getData('text/plain');
+  e.preventDefault();
+  $('pasteBox').value = text;
+  if(html && parseHtmlTable(html)) $('pasteBox').dataset.html = html; else delete $('pasteBox').dataset.html;
+  setTimeout(reparse, 0);
+});
+$('pasteBox').addEventListener('input', ()=>{ delete $('pasteBox').dataset.html; reparse(); });
+$('hasHeader').addEventListener('change', reparse);
+
+function reparse(){
+  const hh = $('hasHeader').checked;
+  const html = $('pasteBox').dataset.html;
+  if(html){
+    const p = parseHtmlTable(html);
+    importData = p ? buildImportData(p.rows, p.links, hh) : null;
+  } else {
+    importData = buildImportData(parseDelimited($('pasteBox').value), null, hh);
+  }
+  fillSelects(); drawPreview();
+}
+
+function fillSelects(){
+  const opts = allowNone => {
+    let h = allowNone ? '<option value="-1">（不使用）</option>' : '';
+    if(importData) h += importData.headers.map((x,i)=>`<option value="${i}">${esc(x)}</option>`).join('');
+    return h;
+  };
+  ['mName','mSub','mUrl','mImg','mGroup'].forEach(id => { $(id).innerHTML = opts(id!=='mName'); });
+  $('mTarget').innerHTML = '<option value="__new">新建分组</option>' +
+    state.sections.map(s=>`<option value="${s.id}">追加到：${esc(s.title)}</option>`).join('');
+  if(importData){
+    const m = guessMap(importData);
+    $('mName').value  = m.name;
+    $('mSub').value   = m.sub  >= 0 ? m.sub  : -1;
+    $('mUrl').value   = m.url  >= 0 ? m.url  : -1;
+    $('mImg').value   = m.img  >= 0 ? m.img  : -1;
+    $('mGroup').value = m.group>= 0 ? m.group: -1;
+  }
+}
+['mName','mSub','mUrl','mImg','mGroup'].forEach(id=> $(id).addEventListener('change', drawPreview));
+
+function drawPreview(){
+  if(!importData){ $('prevBox').innerHTML=''; return; }
+  const g = id => +$(id).value;
+  const cols = [['名称',g('mName')],['副标题',g('mSub')],['链接',g('mUrl')],['图片',g('mImg')],['分组',g('mGroup')]].filter(c=>c[1]>=0);
+  $('prevBox').innerHTML = `<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
+    ${importData.rows.slice(0,40).map(r=>`<tr>${cols.map(c=>`<td class="${c[0]==='链接'?'lk':''}">${esc(r[c[1]]||'')}</td>`).join('')}</tr>`).join('')}
+  </tbody></table>`;
+}
+
+$('btnDoImport').onclick = ()=>{
+  if(!importData || !importData.rows.length){ alert('还没有数据，请先粘贴表格。'); return; }
+  const [ni,si,ui,ii,gr] = ['mName','mSub','mUrl','mImg','mGroup'].map(id=>+$(id).value);
+  const layout = $('mLayout').value;
+  const auto = $('mAuto').checked;
+  const mk = r => {
+    const row = {name:(r[ni]||'').trim(), sub:si>=0?(r[si]||'').trim():'', url:ui>=0?(r[ui]||'').trim():'',
+                 logo:ii>=0?(r[ii]||'').trim():'', img:''};
+    if(!row.url && isUrl(row.name)) row.url = row.name;      // 只粘了一列链接的情况
+    return auto ? enrich(row) : row;
+  };
+
+  if(gr >= 0){
+    const groups = new Map();
+    importData.rows.forEach(r=>{
+      const key = (r[gr]||'未分组').trim() || '未分组';
+      if(!groups.has(key)) groups.set(key,[]);
+      groups.get(key).push(mk(r));
+    });
+    for(const [title, rows] of groups){
+      const exist = state.sections.find(s=>s.title===title);
+      if(exist) exist.rows.push(...rows);
+      else state.sections.push({id:uid(), title, desc:'', layout, hero:'', heroCap:'', rows});
+    }
+  } else {
+    const rows = importData.rows.map(mk);
+    const t = $('mTarget').value;
+    if(t === '__new') state.sections.push({id:uid(), title:'新分组', desc:'', layout, hero:'', heroCap:'', rows});
+    else { const s = state.sections.find(x=>x.id===t); s.rows.push(...rows); s.layout = layout; }
+  }
+  modal.classList.remove('on');
+  render();
+};
+
+/* =========================================================
+   9. 分组 / 示例 / 存档
+   ========================================================= */
+const BLANK_SECTION = {
+  links:     {title:'新分组', layout:'c2'},
+  directory: {title:'World Media Directory 世界媒体名录',
+              desc:'以下为我们用于触达记者的媒体目标清单。是否刊发由各媒体自行决定。',
+              regions:[{flag:'🇺🇸', name:'United States', count:'211 targets including :', url:'', names:[]}]},
+  social:    {title:'Boost your reach 分享到社交媒体', desc:'一键分享您的新闻稿。',
+              rows:['Facebook','X/Twitter','LinkedIn','Bluesky'].map(n=>({name:n,sub:'',url:'',img:'',logo:''}))},
+  summary:   {title:'Report Summary 报告摘要',
+              summary:{titleStat:'', titleText:'', textStat:'', textExcerpt:'', anchors:[], others:[], images:[], videos:0}}
+};
+$('btnAddSec').onclick = ()=>{
+  const t = $('newType').value;
+  state.sections.push(Object.assign(
+    {id:uid(), type:t, title:'新区块', desc:'', layout:'c2', hero:'', heroCap:'', rows:[], regions:[], summary:null},
+    BLANK_SECTION[t]
+  ));
+  render();
+  const it = document.querySelector(`.sec-item[data-sid="${state.sections[state.sections.length-1].id}"]`);
+  if(it) it.classList.add('open');
+};
+
+$('btnMatch').onclick = ()=>{
+  if(!LOGOS.count){
+    alert('还没有 Logo 图库。\n\n把传播报告 PDF 放进 pr-link-report 文件夹，运行：\n  python extract_logos.py\n生成 logos.js 后刷新本页即可。');
+    return;
+  }
+  let total = 0, hit = 0;
+  state.sections.forEach(s=>s.rows.forEach(r=>{
+    total++;
+    enrich(r, true);
+    if(r.logo) hit++;
+  }));
+  render();
+  alert(`共 ${total} 条，匹配上 ${hit} 条。未匹配的多半是图库里没收录的域名，可再跑一份别的报告 PDF 扩充图库。`);
+};
+
+$('btnDemo').onclick = ()=>{
+  const keep = {logo:state.logo, cover:state.cover};
+  // 有 sample.js（由 build_sample.py 从真实报告 PDF 还原）就用完整样例
+  if(window.SAMPLE_REPORT && window.SAMPLE_REPORT.sections){
+    state = JSON.parse(JSON.stringify(window.SAMPLE_REPORT));
+    state.logo = keep.logo || state.logo;
+    state.cover = keep.cover || state.cover;
+    selected = null;
+    normalizeState();
+    syncFields(); render();
+    return;
+  }
+  state = defaultState();
+  state.logo = keep.logo; state.cover = keep.cover;
+  state.title = 'Bridge 2026 Explores How Language and Culture Can Shape Global Talent Development in New York';
+  state.subtitle = 'Distributed on August 21, 2026 06:02 GMT.';
+  state.intro = '恭喜！您的新闻稿已进入今日新闻周期。以下为主要新闻通讯社、搜索引擎与独立媒体的转载收录情况，点击名称可直达对应报道。';
+  state.sections = [
+    {id:uid(),title:'Major newswires 主要通讯社',desc:'新闻稿已分发至以下主要通讯社。点击下方链接查看您的新闻稿。',layout:'t4',hero:'',heroCap:'',
+     rows:[{name:'Google News',url:'https://news.google.com'},{name:'AP News',url:'https://apnews.com'},
+           {name:'New York Newswire',url:'https://example.com/ny'},{name:'United States Newswire',url:'https://example.com/us'},
+           {name:'China Newswire',url:'https://example.com/cn'}]},
+    {id:uid(),title:'转载页面截图 Reprint Screenshots',desc:'以下为部分转载页面的实拍截图，点击图片可直达原文。',layout:'s2',hero:'',heroCap:'',
+     rows:[{name:'WPIX CW 11',sub:'New York City (NY)',url:'https://example.com/3'},
+           {name:'KRON MyNetworkTV 4',sub:'San Francisco (CA)',url:'https://example.com/4'},
+           {name:'WGN 9',sub:'Chicago (IL)',url:'https://example.com/5'},
+           {name:'KTLA 5',sub:'Los Angeles (CA)',url:'https://example.com/6'}]},
+    {id:uid(),title:'Major News Platforms 独立媒体转载',desc:'以下为可追踪到的独立新闻媒体转载列表。',layout:'c2',hero:'',heroCap:'',
+     rows:[{name:'WIVB CBS 4',sub:'Buffalo (NY)',url:'https://example.com/1'},
+           {name:'WTEN ABC 10',sub:'Albany (NY)',url:'https://example.com/2'},
+           {name:'WSYR ABC 9',sub:'Syracuse (NY)',url:'https://example.com/7'},
+           {name:'WROC CBS 8',sub:'Rochester (NY)',url:'https://example.com/8'}]},
+    {id:uid(),title:'EIN Presswire Distribution Channels',desc:'按所选行业类别分发的线上新闻频道。',layout:'list',hero:'',heroCap:'',
+     rows:[{name:'Business News Today',url:'https://example.com/a'},{name:'Education News Today',url:'https://example.com/b'},
+           {name:'Culture News Today',url:'https://example.com/c'},{name:'Conferences & Trade Shows Today',url:'https://example.com/d'},
+           {name:'International Organizations News Today',url:'https://example.com/e'},{name:'Lifestyle News Today',url:'https://example.com/f'}]}
+  ];
+  selected = null;
+  normalizeState();
+  syncFields(); render();
+};
+
+/* 补齐缺失字段，兼容旧版本存档 */
+function normalizeState(){
+  state.sections.forEach(s=>{
+    s.id = s.id || uid();
+    s.type = s.type||'links'; s.rows = s.rows||[]; s.regions = s.regions||[];
+    s.hero = s.hero||''; s.heroCap = s.heroCap||'';
+    s.rows.forEach(r=>{
+      r.img = r.img||''; r.logo = r.logo||'';
+      if(isLib(r.img)){ r.logo = r.img; r.img = ''; }   // 旧版本把 logo 存在 img 里，迁移过来
+    });
+  });
+}
+
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+/* 项目 JSON 里内嵌所有用到的图片，换电脑也能复原 */
+function usedRefs(){
+  const set = new Set();
+  const add = v => { if(isRef(v)) set.add(v.slice(4)); };
+  add(state.logo); add(state.cover);
+  state.sections.forEach(s=>{
+    add(s.hero);
+    (s.rows||[]).forEach(r=>{ add(r.img); add(r.logo); });
+    ((s.summary&&s.summary.images)||[]).forEach(i=>add(i.img));
+  });
+  return [...set];
+}
+$('btnSave').onclick = ()=>{
+  const _images = {};
+  usedRefs().forEach(id=>{ if(IMG[id]) _images[id] = IMG[id]; });
+  download('pr-report.json', JSON.stringify({...state, _images}, null, 2), 'application/json');
+};
+$('btnLoad').onclick = ()=> $('fProj').click();
+$('fProj').onchange = e=>{
+  const f = e.target.files[0]; e.target.value='';
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = async ()=>{
+    try{
+      const obj = JSON.parse(rd.result);
+      const imgs = obj._images || {};
+      delete obj._images;
+      for(const [id,url] of Object.entries(imgs)){ IMG[id]=url; await IDB.put(id,url); }
+      state = Object.assign(defaultState(), obj);
+      selected = null;
+      normalizeState();
+      syncFields(); render();
+    }catch(err){ alert('文件解析失败：' + err.message); }
+  };
+  rd.readAsText(f);
+};
+$('btnReset').onclick = ()=>{ if(confirm('清空全部内容？（图片仓库保留）')){ state = defaultState(); selected=null; syncFields(); render(); } };
+
+/* =========================================================
+   10. 导出
+   ========================================================= */
+$('btnPrint').onclick = ()=>{
+  const sel = selected; selected = null; markSelection();
+  document.querySelectorAll('[contenteditable]').forEach(n=>n.setAttribute('contenteditable','false'));
+  window.print();
+  setTimeout(()=>{
+    document.querySelectorAll('[contenteditable]').forEach(n=>n.setAttribute('contenteditable','true'));
+    selected = sel; markSelection();
+  }, 500);
+};
+
+/** Google Docs 只认表格 + 内联样式，不认 grid/flex，所以单独生成一份 */
+function toDocHtml(){
+  const N = state.navy, A = state.accent;
+  const imgTag = (ref, w) => { const s = imgSrc(ref); return s ? `<img src="${esc(s)}" width="${w}" style="max-width:100%">` : ''; };
+  const cell = (r, mode, w) => {
+    const u = normUrl(r.url);
+    const link = inner => u ? `<a href="${esc(u)}" style="color:#111827;font-weight:bold;text-decoration:none">${inner}</a>` : inner;
+    if(mode === 'tile'){                                   // 品牌方块：有图放图，无图放名称
+      return r.logo ? link(imgTag(r.logo, Math.min(w, 150))) : link(esc(r.name));
+    }
+    const nm  = link(esc(r.name));
+    const pic = (mode==='shot' && (r.img||r.logo)) ? link(imgTag(r.img||r.logo, r.img ? w : Math.min(w,150))) + '<br>' : '';
+    const logo= (mode==='text' && r.logo) ? '<br>' + imgTag(r.logo, 90) : '';
+    return `${pic}${nm}${r.sub?`<br><span style="font-size:9pt;color:#6b7280">${esc(r.sub)}</span>`:''}${logo}`;
+  };
+  const gridTable = (rows, cols, mode) => {
+    const w = Math.floor(640/cols);
+    const align = mode==='tile' ? 'middle" align="center' : 'top';
+    let h = `<table width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:10pt">`;
+    for(let i=0;i<rows.length;i+=cols){
+      h += '<tr>';
+      for(let c=0;c<cols;c++){
+        const r = rows[i+c];
+        h += `<td width="${Math.floor(100/cols)}%" style="border:1px solid #e5e7eb" valign="${align}">${r?cell(r,mode,w):''}</td>`;
+      }
+      h += '</tr>';
+    }
+    return h + '</table>';
+  };
+  const colsOf = l => ({c1:1,c2:2,c3:3,c4:4,t2:2,t3:3,t4:4,s1:1,s2:2,s3:3,list:2,chips:3,table:1}[l] || 2);
+  const modeOf = l => isTile(l) ? 'tile' : (isShot(l) ? 'shot' : 'text');
+  const bar = t => `<p style="background:${N};color:#ffffff;padding:6pt 9pt;font-size:11pt;font-weight:bold;border-left:4pt solid ${A};margin:16pt 0 6pt">${esc(t)}</p>`;
+
+  let body = `
+    <p style="font-size:16pt;font-weight:bold;color:${N};margin:0">${esc(state.brand)}</p>
+    <p style="font-size:9pt;color:#6b7280;margin:0 0 14pt">${esc(state.tagline)}</p>
+    <h1 style="font-size:19pt;line-height:1.3;margin:0 0 4pt">${esc(state.title)}</h1>
+    <p style="font-size:9.5pt;color:#6b7280;margin:0 0 10pt">${esc(state.subtitle)}</p>
+    ${state.intro?`<p style="font-size:10pt;line-height:1.6;color:#374151">${esc(state.intro)}</p>`:''}
+    ${state.cover?`<p>${imgTag(state.cover,640)}</p>${state.coverCap?`<p style="font-size:9pt;color:#6b7280;text-align:center;margin-top:-6pt">${esc(state.coverCap)}</p>`:''}`:''}`;
+
+  if(state.toc){
+    body += `<p style="font-size:9pt;letter-spacing:1px;color:#6b7280;margin:14pt 0 4pt"><b>目录 CONTENTS</b></p><ul style="font-size:10pt;line-height:1.7">`
+      + state.sections.map(s=>`<li>${esc(s.title)}</li>`).join('') + `</ul>`;
+  }
+
+  for(const s of state.sections){
+    const rows = (s.rows||[]).filter(r=>r.name||r.url||r.img||r.logo);
+    body += bar(s.title);
+    if(s.desc) body += `<p style="font-size:9.5pt;color:#4b5563;line-height:1.6;margin:0 0 6pt">${esc(s.desc)}</p>`;
+    if(s.hero) body += `<p>${imgTag(s.hero,640)}</p>${s.heroCap?`<p style="font-size:9pt;color:#6b7280;text-align:center;margin-top:-6pt">${esc(s.heroCap)}</p>`:''}`;
+
+    if(s.type === 'directory'){
+      for(const g of s.regions||[]){
+        body += `<p style="margin:8pt 0 2pt"><b>${esc((g.flag?g.flag+' ':'')+g.name)}</b>${
+          g.count?` <span style="font-size:9pt;color:#6b7280">${esc(g.count)}</span>`:''}</p>`;
+        const n = g.names||[];
+        body += `<table width="100%" cellpadding="3" cellspacing="0" style="font-size:9pt;border-collapse:collapse">`;
+        for(let i=0;i<n.length;i+=3){
+          body += '<tr>' + [0,1,2].map(c=>`<td width="33%">${n[i+c]?'▪ '+esc(n[i+c]):''}</td>`).join('') + '</tr>';
+        }
+        body += `</table>`;
+      }
+      continue;
+    }
+    if(s.type === 'social'){
+      body += gridTable(rows, 4, 'tile');
+      continue;
+    }
+    if(s.type === 'summary'){
+      const f = s.summary||{};
+      const ul = (a,fn)=> (a||[]).length ? `<ul style="font-size:9.5pt">${a.map(fn).join('')}</ul>` : '';
+      body += `<p style="font-size:10pt"><b>Title: ${esc(f.titleStat||'')}</b><br>${esc(f.titleText||'')}</p>`
+            + `<p style="font-size:10pt"><b>Text: ${esc(f.textStat||'')}</b><br>${esc(f.textExcerpt||'')}</p>`
+            + `<p style="font-size:10pt"><b>Keyword Anchor Text Links: ${(f.anchors||[]).length}</b></p>`
+            + ul(f.anchors, a=>`<li>${esc(a.text||'')}${a.url?` - <a href="${esc(normUrl(a.url))}">${esc(a.url)}</a>`:''}</li>`)
+            + `<p style="font-size:10pt"><b>Other Links: ${(f.others||[]).length}</b></p>`
+            + ul(f.others, u=>`<li><a href="${esc(normUrl(u))}">${esc(u)}</a></li>`)
+            + `<p style="font-size:10pt"><b>Embedded Images: ${(f.images||[]).length}</b></p>`
+            + (f.images||[]).map(im=>`<p style="font-size:9pt">${imgTag(im.img,200)}<br>${esc(im.name||'')}<br>${esc(im.caption||'')}</p>`).join('')
+            + `<p style="font-size:10pt"><b>Embedded Videos: ${f.videos||0}</b></p>`;
+      continue;
+    }
+
+    if(s.layout==='table'){
+      body += `<table width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:10pt">
+        <tr><td style="border:1px solid #e5e7eb;background:#f3f4f6"><b>名称</b></td><td style="border:1px solid #e5e7eb;background:#f3f4f6"><b>说明</b></td><td style="border:1px solid #e5e7eb;background:#f3f4f6"><b>截图</b></td></tr>`
+        + rows.map(r=>`<tr><td style="border:1px solid #e5e7eb">${cell(r,'plain')}</td><td style="border:1px solid #e5e7eb;font-size:9pt;color:#6b7280">${esc(r.sub||'')}</td><td style="border:1px solid #e5e7eb">${imgTag(r.img||r.logo,200)}</td></tr>`).join('')
+        + `</table>`;
+    } else {
+      body += gridTable(rows, colsOf(s.layout), modeOf(s.layout));
+    }
+  }
+
+  if(state.linkIndex){
+    body += bar('附录：链接清单 Link Index')
+      + `<table width="100%" cellpadding="5" cellspacing="0" style="border-collapse:collapse;font-size:9pt">`
+      + state.sections.flatMap(s=>s.rows.filter(r=>normUrl(r.url)).map(r=>
+        `<tr><td width="30%" style="border:1px solid #e5e7eb">${esc(r.name)}</td><td style="border:1px solid #e5e7eb"><a href="${esc(normUrl(r.url))}">${esc(normUrl(r.url))}</a></td></tr>`)).join('')
+      + `</table>`;
+  }
+
+  body += `<p style="font-size:9pt;color:#6b7280;margin-top:16pt;border-top:1px solid #e5e7eb;padding-top:6pt">${esc(state.footer)} · 共 ${totalLinks()} 条链接</p>`;
+  return `<html><head><meta charset="utf-8"></head><body style="font-family:Arial,'Microsoft YaHei',sans-serif">${body}</body></html>`;
+}
+
+$('btnCopyDoc').onclick = async ()=>{
+  const html = toDocHtml();
+  const note = totalShots() ? '\n\n注意：截图能否随粘贴一起进入 Google Docs 取决于浏览器，若图片没过去，用「导出全部截图」拿到原图再手动插入。' : '';
+  try{
+    await navigator.clipboard.write([new ClipboardItem({
+      'text/html' : new Blob([html],{type:'text/html'}),
+      'text/plain': new Blob([html.replace(/<[^>]+>/g,' ')],{type:'text/plain'})
+    })]);
+    alert('已复制。到 Google Docs 里 Ctrl+V 粘贴，超链接会完整保留。' + note);
+  }catch(err){
+    const d = document.createElement('div');
+    d.innerHTML = html; d.style.cssText='position:fixed;left:-9999px;top:0';
+    document.body.appendChild(d);
+    const rg = document.createRange(); rg.selectNodeContents(d);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg);
+    const ok = document.execCommand('copy');
+    sel.removeAllRanges(); d.remove();
+    alert(ok ? '已复制，去 Google Docs 粘贴即可。' + note : '复制失败，请改用「下载 .doc」。');
+  }
+};
+
+$('btnDoc').onclick = ()=> download('pr-report.doc', toDocHtml(), 'application/msword');
+
+$('btnHtml').onclick = ()=>{
+  const clone = document.getElementById('paper').cloneNode(true);
+  clone.querySelectorAll('[contenteditable]').forEach(n=>n.removeAttribute('contenteditable'));
+  clone.querySelectorAll('.noprint,.sel-row').forEach(n=>{ if(n.classList.contains('noprint')) n.remove(); else n.classList.remove('sel-row'); });
+  const css = [...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
+  download('pr-report.html',
+`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>${esc(state.title)}</title>
+<style>:root{--navy:${state.navy};--accent:${state.accent}}${css}</style></head>
+<body style="background:#fff"><div class="paper" style="box-shadow:none;margin:0 auto">${clone.innerHTML}</div></body></html>`,
+  'text/html');
+};
+
+/* 导出所有截图为独立文件（编号与报告顺序一致，方便在 Canva 里重排）
+   图库 logo 不在此列——它们本来就在 logos/ 目录里有原图 */
+$('btnShots').onclick = async ()=>{
+  const items = [];
+  if(state.cover) items.push(['00_封面', state.cover]);
+  state.sections.forEach((s,si)=>{
+    if(s.hero) items.push([`${String(si+1).padStart(2,'0')}_00_${s.title}_大图`, s.hero]);
+    s.rows.forEach((r,ri)=>{ if(r.img) items.push([`${String(si+1).padStart(2,'0')}_${String(ri+1).padStart(2,'0')}_${r.name}`, r.img]); });
+  });
+  if(!items.length){ alert('还没有添加任何截图。（图库 logo 的原图在 logos/ 目录里）'); return; }
+  if(!confirm(`将逐个下载 ${items.length} 个图片文件，浏览器可能会询问「允许多文件下载」，请选允许。继续？`)) return;
+  for(const [name, ref] of items){
+    const src = imgSrc(ref);
+    if(!src) continue;
+    const ext = /^data:image\/(\w+)/.exec(src)?.[1]?.replace('jpeg','jpg') || 'jpg';
+    const a = document.createElement('a');
+    a.href = src;
+    a.download = name.replace(/[\\/:*?"<>|]/g,'_').slice(0,60) + '.' + ext;
+    a.click();
+    await new Promise(r=>setTimeout(r, 220));
+  }
+};
+
+function download(name, content, type){
+  const url = URL.createObjectURL(new Blob([content],{type}));
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+/* =========================================================
+   11. 启动
+   ========================================================= */
+(async function init(){
+  // IndexedDB 在隐私模式 / 禁用站点数据时可能既不返回也不报错，必须限时兜底，
+  // 否则整页会卡在这里渲染不出来。
+  try{
+    const imgs = await Promise.race([
+      IDB.all(),
+      new Promise(res=>setTimeout(()=>res(null), 3000))
+    ]);
+    if(imgs) Object.assign(IMG, imgs);
+    else console.warn('IndexedDB 无响应，本次不加载已存图片');
+  }catch(e){ console.warn('IndexedDB 不可用，截图将无法跨刷新保留', e); }
+  try{
+    const saved = localStorage.getItem(LS_KEY);
+    if(saved) state = Object.assign(defaultState(), JSON.parse(saved));
+  }catch(e){}
+  normalizeState();
+  if(LOGOS.count) enrichAll(false);          // 图库更新后，老项目自动补上新收录的 logo
+  syncFields();
+  if(!state.sections.length) document.getElementById('btnDemo').click(); else render();
+})();
+</script>
+</body>
+</html>
