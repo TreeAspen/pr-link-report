@@ -24,7 +24,11 @@
 
   /* ---------- 左侧控制台 ---------- */
   .panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:16px}
-  .panel h1{font-size:16px;margin:0 0 4px}
+  .titlebar{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
+  .panel h1{font-size:16px;margin:0;flex:1}
+  .langsw{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:0 0 auto}
+  .langsw button{border:0;border-radius:0;padding:4px 9px;font-size:11.5px;background:#fff;color:var(--muted);line-height:1.4}
+  .langsw button.on{background:var(--navy);color:#fff;font-weight:700}
   .panel .hint{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 14px}
   .grp{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px}
   .grp>h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
@@ -251,69 +255,72 @@
 <div class="app">
   <!-- ============ 控制台 ============ -->
   <aside class="panel">
-    <h1>PR 链接报告生成器</h1>
-    <p class="hint">Excel 粘贴 → 批量生成带超链接的报告页 → 配截图 → 导出 PDF / Google Docs。右侧预览里的文字可直接点击修改。</p>
+    <div class="titlebar">
+      <h1 data-i18n="app.title"></h1>
+      <div class="langsw" id="langsw">
+        <button data-lang="zh">中文</button><button data-lang="en">EN</button>
+      </div>
+    </div>
+    <p class="hint" data-i18n="app.sub"></p>
 
     <div class="grp">
-      <h2>① 导入数据</h2>
-      <button class="primary wide" id="btnImport">📋 粘贴 Excel / 链接清单，批量导入</button>
-      <button class="wide" id="btnMatch">🔎 全文档按链接匹配 Logo</button>
+      <h2 data-i18n="g1.h"></h2>
+      <button class="primary wide" id="btnImport" data-i18n="g1.import"></button>
+      <button class="wide" id="btnMatch" data-i18n="g1.match"></button>
       <div class="btnrow">
-        <button id="btnDemo">载入示例</button>
+        <button id="btnDemo" data-i18n="g1.demo"></button>
         <select id="newType" style="width:auto;flex:1">
-          <option value="links">链接卡片组</option>
-          <option value="directory">世界媒体名录</option>
-          <option value="social">社交分享行</option>
-          <option value="summary">报告摘要面板</option>
+          <option value="links"     data-i18n="type.links"></option>
+          <option value="directory" data-i18n="type.directory"></option>
+          <option value="social"    data-i18n="type.social"></option>
+          <option value="summary"   data-i18n="type.summary"></option>
         </select>
-        <button id="btnAddSec">+ 新增</button>
+        <button id="btnAddSec" data-i18n="g1.add"></button>
       </div>
       <div class="tip" id="libTip"></div>
-      <div class="tip">配截图有三种方式：① 把图片文件<b>拖到右侧任意卡片上</b>；② 点中卡片后直接 <b>Ctrl+V</b> 粘贴剪贴板截图；③ 在分组里<b>一次选多张图</b>，按文件名自动匹配条目。</div>
+      <div class="tip" data-i18n-html="g1.shotTip"></div>
     </div>
 
     <div class="grp">
-      <h2>② 页头 / 品牌</h2>
-      <label>品牌名</label><input type="text" id="fBrand">
-      <label>品牌副标题</label><input type="text" id="fTagline">
-      <label>Logo 图片（可选）</label><input type="file" id="fLogo" accept="image/*">
-      <label>报告主标题</label><textarea id="fTitle" rows="2"></textarea>
-      <label>副信息（日期等）</label><input type="text" id="fSubtitle">
-      <label>开篇说明</label><textarea id="fIntro" rows="3"></textarea>
-      <label>封面大图（可选，如活动合影）</label>
+      <h2 data-i18n="g2.h"></h2>
+      <label data-i18n="g2.brand"></label><input type="text" id="fBrand">
+      <label data-i18n="g2.tagline"></label><input type="text" id="fTagline">
+      <label data-i18n="g2.logo"></label><input type="file" id="fLogo" accept="image/*">
+      <label data-i18n="g2.title"></label><textarea id="fTitle" rows="2"></textarea>
+      <label data-i18n="g2.subtitle"></label><input type="text" id="fSubtitle">
+      <label data-i18n="g2.intro"></label><textarea id="fIntro" rows="3"></textarea>
+      <label data-i18n="g2.cover"></label>
       <input type="file" id="fCover" accept="image/*">
-      <input type="text" id="fCoverCap" placeholder="封面图说明文字" style="margin-top:6px">
-      <button id="btnCoverDel" style="margin-top:6px;font-size:12px;padding:4px 9px">移除封面图</button>
-      <label>页脚</label><input type="text" id="fFooter">
+      <input type="text" id="fCoverCap" data-i18n-ph="g2.coverCap" style="margin-top:6px">
+      <button id="btnCoverDel" style="margin-top:6px;font-size:12px;padding:4px 9px" data-i18n="g2.coverDel"></button>
+      <label data-i18n="g2.footer"></label><input type="text" id="fFooter">
       <div class="row2">
-        <div><label>主题色</label><input type="color" id="fNavy"></div>
-        <div><label>强调色</label><input type="color" id="fAccent"></div>
+        <div><label data-i18n="g2.navy"></label><input type="color" id="fNavy"></div>
+        <div><label data-i18n="g2.accent"></label><input type="color" id="fAccent"></div>
       </div>
-      <label style="margin-top:10px"><input type="checkbox" id="fToc" style="width:auto"> 生成目录（PDF 内部跳转锚点）</label>
-      <label><input type="checkbox" id="fIndex" style="width:auto"> 附录：链接清单（方便 Canva 里重新加链接）</label>
+      <label style="margin-top:10px"><input type="checkbox" id="fToc" style="width:auto"> <span data-i18n="g2.toc"></span></label>
+      <label><input type="checkbox" id="fIndex" style="width:auto"> <span data-i18n="g2.index"></span></label>
     </div>
 
     <div class="grp">
-      <h2>③ 分组 <span class="count" id="secCount"></span></h2>
+      <h2><span data-i18n="g3.h"></span> <span class="count" id="secCount"></span></h2>
       <div id="secList"></div>
     </div>
 
     <div class="grp">
-      <h2>④ 导出</h2>
-      <button class="primary wide" id="btnPrint">🖨 打印 / 另存为 PDF（链接可点）</button>
-      <button class="wide" id="btnCopyDoc">📄 复制到 Google Docs（保留链接）</button>
-      <button class="wide" id="btnDoc">⬇ 下载 .doc（可上传到 Google Docs）</button>
-      <button class="wide" id="btnHtml">⬇ 下载 .html</button>
-      <button class="wide" id="btnShots">🖼 导出全部截图为图片文件</button>
+      <h2 data-i18n="g4.h"></h2>
+      <button class="primary wide" id="btnPrint"   data-i18n="g4.print"></button>
+      <button class="wide" id="btnCopyDoc" data-i18n="g4.copyDoc"></button>
+      <button class="wide" id="btnDoc"     data-i18n="g4.doc"></button>
+      <button class="wide" id="btnHtml"    data-i18n="g4.html"></button>
+      <button class="wide" id="btnShots"   data-i18n="g4.shots"></button>
       <div class="btnrow">
-        <button id="btnSave">保存项目</button>
-        <button id="btnLoad">载入项目</button>
-        <button class="danger" id="btnReset">清空</button>
+        <button id="btnSave" data-i18n="g4.save"></button>
+        <button id="btnLoad" data-i18n="g4.load"></button>
+        <button class="danger" id="btnReset" data-i18n="g4.reset"></button>
       </div>
       <input type="file" id="fProj" accept=".json" hidden>
-      <div class="warn" style="margin-top:12px">
-        <b>Canva 说明：</b>Canva 导入 PDF 会把超链接压掉，只保留版面。要在 Canva 里保留链接，请勾选「附录：链接清单」，导入后按清单给文字重新挂链接；<b>需要链接原样保留时走 Google Docs 路线</b>。截图可用上面的「导出全部截图」拿到原图文件，再拖进 Canva。
-      </div>
+      <div class="warn" style="margin-top:12px" data-i18n-html="g4.canva"></div>
       <div class="tip" id="storeInfo"></div>
     </div>
   </aside>
@@ -325,11 +332,11 @@
 </div>
 
 <div class="selbar" id="selbar">
-  <span>已选中：</span><b id="selName"></b>
+  <span data-i18n="sel.picked"></span><b id="selName"></b>
   <span class="sp"></span>
-  <span style="opacity:.75">Ctrl+V 粘贴截图 · 或把图片拖到卡片上</span>
-  <button id="selPick">选择图片</button>
-  <button id="selDel">删除截图</button>
+  <span style="opacity:.75" data-i18n="sel.hint"></span>
+  <button id="selPick" data-i18n="sel.pick"></button>
+  <button id="selDel"  data-i18n="sel.del"></button>
   <button id="selClose">✕</button>
 </div>
 <input type="file" id="selFile" accept="image/*" hidden>
@@ -337,38 +344,34 @@
 <!-- ============ 导入弹窗 ============ -->
 <div class="modal" id="modal">
   <div class="box">
-    <h2>粘贴 Excel 表格</h2>
-    <p class="hint">
-      在 Excel / Google Sheets 里选中区域 <b>Ctrl+C</b>，然后点下面的框 <b>Ctrl+V</b>。<br>
-      支持三种链接来源：单独的「链接」列；或名称单元格本身带的超链接（自动识别，显示为「⟨列N的超链接⟩」）；两者都有时以映射为准。<br>
-      表里如果有「分组 / 板块」列，映射后会<b>一次性拆成多个分组</b>。
-    </p>
-    <textarea id="pasteBox" rows="5" placeholder="点这里，然后 Ctrl+V 粘贴…"></textarea>
-    <label style="margin-top:10px"><input type="checkbox" id="hasHeader" style="width:auto" checked> 第一行是表头</label>
+    <h2 data-i18n="m.h"></h2>
+    <p class="hint" data-i18n-html="m.hint"></p>
+    <textarea id="pasteBox" rows="5" data-i18n-ph="m.ph"></textarea>
+    <label style="margin-top:10px"><input type="checkbox" id="hasHeader" style="width:auto" checked> <span data-i18n="m.header"></span></label>
 
     <div class="maprow">
-      <div><label>名称（显示文字）*</label><select id="mName"></select></div>
-      <div><label>副标题（地区/备注）</label><select id="mSub"></select></div>
-      <div><label>链接 URL *</label><select id="mUrl"></select></div>
-      <div><label>图片 URL（Logo/截图）</label><select id="mImg"></select></div>
-      <div><label>分组（拆分依据）</label><select id="mGroup"></select></div>
+      <div><label data-i18n="m.cName"></label><select id="mName"></select></div>
+      <div><label data-i18n="m.cSub"></label><select id="mSub"></select></div>
+      <div><label data-i18n="m.cUrl"></label><select id="mUrl"></select></div>
+      <div><label data-i18n="m.cImg"></label><select id="mImg"></select></div>
+      <div><label data-i18n="m.cGroup"></label><select id="mGroup"></select></div>
     </div>
 
     <div class="row2">
-      <div><label>版式</label>
+      <div><label data-i18n="m.layout"></label>
         <select id="mLayout"></select>
       </div>
-      <div><label>无分组列时，写入</label>
+      <div><label data-i18n="m.target"></label>
         <select id="mTarget"></select>
       </div>
     </div>
     <label style="margin-top:8px"><input type="checkbox" id="mAuto" style="width:auto" checked>
-      从 Logo 图库按链接域名自动补全<b>名称 / 地区 / Logo</b> <span class="count" id="libInfo"></span></label>
+      <span data-i18n-html="m.auto"></span> <span class="count" id="libInfo"></span></label>
 
     <div class="prev" id="prevBox" style="margin-top:12px"></div>
     <div class="btnrow" style="justify-content:flex-end;margin-top:14px">
-      <button id="btnCancel">取消</button>
-      <button class="primary" id="btnDoImport">生成</button>
+      <button id="btnCancel" data-i18n="m.cancel"></button>
+      <button class="primary" id="btnDoImport" data-i18n="m.go"></button>
     </div>
   </div>
 </div>
@@ -378,6 +381,205 @@
 <!-- 样例项目：由 build_sample.py 从报告 PDF 还原；文件不存在时用内置精简示例 -->
 <script src="sample.js" onerror="window.SAMPLE_REPORT=null"></script>
 <script>
+/* =========================================================
+   00. 中英文文案 / i18n
+   界面语言同时决定文档里的固定文案（目录标题、页脚统计、附录标题）。
+   ========================================================= */
+const I18N = {
+zh:{
+ 'html.lang':'zh-CN',
+ 'app.title':'PR 链接报告生成器',
+ 'app.sub':'Excel 粘贴 → 批量生成带超链接的报告页 → 配截图 → 导出 PDF / Google Docs。右侧预览里的文字可直接点击修改。',
+ 'g1.h':'① 导入数据',
+ 'g1.import':'📋 粘贴 Excel / 链接清单，批量导入',
+ 'g1.match':'🔎 全文档按链接匹配 Logo',
+ 'g1.demo':'载入示例',
+ 'g1.add':'+ 新增',
+ 'g1.shotTip':'配截图有三种方式：① 把图片文件<b>拖到右侧任意卡片上</b>；② 点中卡片后直接 <b>Ctrl+V</b> 粘贴剪贴板截图；③ 在分组里<b>一次选多张图</b>，按文件名自动匹配条目。',
+ 'type.links':'链接卡片组', 'type.directory':'世界媒体名录', 'type.social':'社交分享行', 'type.summary':'报告摘要面板',
+ 'g2.h':'② 页头 / 品牌',
+ 'g2.brand':'品牌名', 'g2.tagline':'品牌副标题', 'g2.logo':'Logo 图片（可选）',
+ 'g2.title':'报告主标题', 'g2.subtitle':'副信息（日期等）', 'g2.intro':'开篇说明',
+ 'g2.cover':'封面大图（可选，如活动合影）', 'g2.coverCap':'封面图说明文字', 'g2.coverDel':'移除封面图',
+ 'g2.footer':'页脚', 'g2.navy':'主题色', 'g2.accent':'强调色',
+ 'g2.toc':'生成目录（PDF 内部跳转锚点）', 'g2.index':'附录：链接清单（方便 Canva 里重新加链接）',
+ 'g3.h':'③ 分组',
+ 'g4.h':'④ 导出',
+ 'g4.print':'🖨 打印 / 另存为 PDF（链接可点）',
+ 'g4.copyDoc':'📄 复制到 Google Docs（保留链接）',
+ 'g4.doc':'⬇ 下载 .doc（可上传到 Google Docs）',
+ 'g4.html':'⬇ 下载 .html', 'g4.shots':'🖼 导出全部截图为图片文件',
+ 'g4.save':'保存项目', 'g4.load':'载入项目', 'g4.reset':'清空',
+ 'g4.canva':'<b>Canva 说明：</b>Canva 导入 PDF 会把超链接压掉，只保留版面。要在 Canva 里保留链接，请勾选「附录：链接清单」，导入后按清单给文字重新挂链接；<b>需要链接原样保留时走 Google Docs 路线</b>。截图可用上面的「导出全部截图」拿到原图文件，再拖进 Canva。',
+ 'sel.picked':'已选中：', 'sel.hint':'Ctrl+V 粘贴截图 · 或把图片拖到卡片上',
+ 'sel.pick':'选择图片', 'sel.del':'删除截图',
+ 'm.h':'粘贴 Excel 表格',
+ 'm.hint':'在 Excel / Google Sheets 里选中区域 <b>Ctrl+C</b>，然后点下面的框 <b>Ctrl+V</b>。<br>支持三种链接来源：单独的「链接」列；或名称单元格本身带的超链接（自动识别，显示为「⟨列N的超链接⟩」）；两者都有时以映射为准。<br>表里如果有「分组 / 板块」列，映射后会<b>一次性拆成多个分组</b>。',
+ 'm.ph':'点这里，然后 Ctrl+V 粘贴…', 'm.header':'第一行是表头',
+ 'm.cName':'名称（显示文字）*', 'm.cSub':'副标题（地区/备注）', 'm.cUrl':'链接 URL *',
+ 'm.cImg':'图片 URL（Logo/截图）', 'm.cGroup':'分组（拆分依据）',
+ 'm.layout':'版式', 'm.target':'无分组列时，写入',
+ 'm.auto':'从 Logo 图库按链接域名自动补全<b>名称 / 地区 / Logo</b>',
+ 'm.cancel':'取消', 'm.go':'生成', 'm.new':'新建分组', 'm.appendTo':'追加到：', 'm.none':'（不使用）',
+ 'm.pName':'名称', 'm.pSub':'副标题', 'm.pUrl':'链接', 'm.pImg':'图片', 'm.pGroup':'分组',
+ 'sec.title':'标题', 'sec.desc':'说明文字', 'sec.layout':'版式',
+ 'sec.match':'🔎 本组匹配 Logo', 'sec.logoDel':'清空本组 Logo',
+ 'sec.shots':'🖼 截图', 'sec.batch':'批量添加（可多选，按文件名自动匹配条目）',
+ 'sec.hero':'本组大图 / 头图', 'sec.heroCap':'大图说明文字',
+ 'sec.heroDel':'移除大图', 'sec.shotsDel':'清空本组截图',
+ 'sec.rows':'条目（每行：名称 ⇥ 副标题 ⇥ 链接，可直接从 Excel 粘贴覆盖）',
+ 'sec.regions':'各地区名录（首行格式：<b>旗帜 地区名 ## 目标数说明 ## 链接</b>，其下每行一家媒体；地区之间用 <b>---</b> 分隔）',
+ 'sec.social':'分享入口（每行：名称 ⇥ 链接）',
+ 'sum.titleStat':'标题统计', 'sum.titleText':'标题原文', 'sum.textStat':'正文统计', 'sum.textExcerpt':'正文摘录',
+ 'sum.anchors':'关键词锚文本链接（每行：文字 ⇥ 链接）', 'sum.others':'其他链接（每行一条）',
+ 'sum.images':'嵌入图片（每行：名称 ⇥ 图说 ⇥ 原图链接）', 'sum.videos':'嵌入视频数',
+ 'doc.toc':'目录 Contents', 'doc.index':'附录：链接清单 Link Index',
+ 'doc.idxName':'名称', 'doc.idxUrl':'URL',
+ 'doc.tName':'名称', 'doc.tSub':'说明', 'doc.tShot':'截图', 'doc.tLink':'链接',
+ 'doc.drop':'拖入图片 / 点击后 Ctrl+V',
+ 'doc.foot':(l,g,p,s)=>`共 ${l} 条链接 · ${g} 个 logo · ${p} 张图 · ${s} 个分组`,
+ 'st.imgs':(n,sz)=>`图片仓库：${n} 张 · ${sz}（存于浏览器 IndexedDB，导入时已压到宽 1400px）`,
+ 'st.lib':(n,m)=>`Logo 图库：${n} 家媒体 / ${m} 张 logo。粘贴链接即按域名自动配图。`,
+ 'st.noLib':'尚无 Logo 图库。把传播报告 PDF 放进本文件夹，运行 <b>python extract_logos.py</b> 生成 logos.js 后刷新，即可实现「粘贴链接自动出图」。',
+ 'st.libN':n=>n?`（图库 ${n} 家）`:'（图库为空）',
+ 'st.count':(s,l,g,p)=>`（${s} 组 / ${l} 链接 / ${g} logo / ${p} 截图）`,
+ 'a.noData':'还没有数据，请先粘贴表格。',
+ 'a.noLib':'还没有 Logo 图库。\n\n把传播报告 PDF 放进 pr-link-report 文件夹，运行：\n  python extract_logos.py\n生成 logos.js 后刷新本页即可。',
+ 'a.noLibShort':'还没有 Logo 图库。请先按侧栏提示运行 extract_logos.py 生成 logos.js。',
+ 'a.matchSec':(n,h)=>`本组 ${n} 条，匹配上 ${h} 条。`,
+ 'a.matchAll':(n,h)=>`共 ${n} 条，匹配上 ${h} 条。未匹配的多半是图库里没收录的域名，可再跑一份别的报告 PDF 扩充图库。`,
+ 'a.delSec':'删除该分组？', 'a.delShots':'清空本组所有条目截图？（logo 保留）',
+ 'a.reset':'清空全部内容？（图片仓库保留）',
+ 'a.switchShot':(m,t)=>`已匹配 ${m}/${t} 张。是否把本组切换为「截图 · 2 列」版式以显示大图？`,
+ 'a.pickFirst':'先在右侧点一下要配图的条目，再 Ctrl+V。',
+ 'a.copied':'已复制。到 Google Docs 里 Ctrl+V 粘贴，超链接会完整保留。',
+ 'a.copied2':'已复制，去 Google Docs 粘贴即可。',
+ 'a.copyFail':'复制失败，请改用「下载 .doc」。',
+ 'a.imgNote':'\n\n注意：截图能否随粘贴一起进入 Google Docs 取决于浏览器，若图片没过去，用「导出全部截图」拿到原图再手动插入。',
+ 'a.noShots':'还没有添加任何截图。（图库 logo 的原图在 logos/ 目录里）',
+ 'a.shotsGo':n=>`将逐个下载 ${n} 个图片文件，浏览器可能会询问「允许多文件下载」，请选允许。继续？`,
+ 'a.loadFail':m=>'文件解析失败：'+m,
+ 'lay.c1':'卡片 · 1 列','lay.c2':'卡片 · 2 列（名称+地区+logo）','lay.c3':'卡片 · 3 列','lay.c4':'卡片 · 4 列',
+ 'lay.t4':'品牌方块 · 4 列（logo 居中）','lay.t3':'品牌方块 · 3 列','lay.t2':'品牌方块 · 2 列',
+ 'lay.s1':'截图 · 大图 1 列','lay.s2':'截图 · 2 列','lay.s3':'截图 · 3 列',
+ 'lay.list':'链接列表 · 3 列','lay.chips':'圆角标签','lay.table':'表格（含截图列）',
+ 'new.section':'新区块','new.group':'新分组',
+ 'def.title':'新闻稿发布传播报告',
+ 'def.intro':'以下为本次新闻稿的媒体转载与收录情况。点击各条目名称即可跳转至对应报道页面。'
+},
+en:{
+ 'html.lang':'en',
+ 'app.title':'PR Link Report Builder',
+ 'app.sub':'Paste from Excel → build a linked report page → add screenshots → export as PDF / Google Docs. Text in the preview is editable in place.',
+ 'g1.h':'1 · Import data',
+ 'g1.import':'📋 Paste Excel or a list of links',
+ 'g1.match':'🔎 Match logos by link across document',
+ 'g1.demo':'Load sample',
+ 'g1.add':'+ Add',
+ 'g1.shotTip':'Three ways to add screenshots: (1) <b>drag an image onto any card</b>; (2) click a card, then press <b>Ctrl+V</b> to paste from the clipboard; (3) <b>select many images at once</b> in a section — they are matched to entries by filename.',
+ 'type.links':'Link cards', 'type.directory':'World media directory', 'type.social':'Social share row', 'type.summary':'Report summary panel',
+ 'g2.h':'2 · Header & branding',
+ 'g2.brand':'Brand name', 'g2.tagline':'Brand tagline', 'g2.logo':'Logo image (optional)',
+ 'g2.title':'Report title', 'g2.subtitle':'Subtitle (date, etc.)', 'g2.intro':'Opening paragraph',
+ 'g2.cover':'Cover image (optional, e.g. event photo)', 'g2.coverCap':'Cover caption', 'g2.coverDel':'Remove cover',
+ 'g2.footer':'Footer', 'g2.navy':'Theme colour', 'g2.accent':'Accent colour',
+ 'g2.toc':'Table of contents (in-PDF anchor links)', 'g2.index':'Appendix: link index (for re-linking in Canva)',
+ 'g3.h':'3 · Sections',
+ 'g4.h':'4 · Export',
+ 'g4.print':'🖨 Print / Save as PDF (links clickable)',
+ 'g4.copyDoc':'📄 Copy to Google Docs (links kept)',
+ 'g4.doc':'⬇ Download .doc (upload to Google Docs)',
+ 'g4.html':'⬇ Download .html', 'g4.shots':'🖼 Export all screenshots as files',
+ 'g4.save':'Save project', 'g4.load':'Load project', 'g4.reset':'Clear',
+ 'g4.canva':'<b>About Canva:</b> importing a PDF into Canva strips the hyperlinks and keeps only the layout. To keep links in Canva, tick “Appendix: link index”, then re-attach links to the text using that list. <b>When links must survive as-is, use the Google Docs route.</b> Use “Export all screenshots” above to get the original image files to drag into Canva.',
+ 'sel.picked':'Selected: ', 'sel.hint':'Ctrl+V to paste a screenshot · or drag an image onto a card',
+ 'sel.pick':'Choose image', 'sel.del':'Remove screenshot',
+ 'm.h':'Paste a spreadsheet',
+ 'm.hint':'Select a range in Excel / Google Sheets, press <b>Ctrl+C</b>, then click the box below and press <b>Ctrl+V</b>.<br>Three link sources are supported: a dedicated URL column; hyperlinks carried by the name cells themselves (detected automatically and shown as “⟨hyperlink of column N⟩”); when both exist, the mapping wins.<br>If the sheet has a <b>group / section</b> column, one paste is split into several sections.',
+ 'm.ph':'Click here, then press Ctrl+V…', 'm.header':'First row is a header',
+ 'm.cName':'Name (display text) *', 'm.cSub':'Subtitle (location / note)', 'm.cUrl':'Link URL *',
+ 'm.cImg':'Image URL (logo / screenshot)', 'm.cGroup':'Group (split by)',
+ 'm.layout':'Layout', 'm.target':'If no group column, write to',
+ 'm.auto':'Auto-fill <b>name / location / logo</b> from the logo library by link domain',
+ 'm.cancel':'Cancel', 'm.go':'Create', 'm.new':'New section', 'm.appendTo':'Append to: ', 'm.none':'(unused)',
+ 'm.pName':'Name', 'm.pSub':'Subtitle', 'm.pUrl':'Link', 'm.pImg':'Image', 'm.pGroup':'Group',
+ 'sec.title':'Title', 'sec.desc':'Description', 'sec.layout':'Layout',
+ 'sec.match':'🔎 Match logos in this section', 'sec.logoDel':'Clear logos in this section',
+ 'sec.shots':'🖼 Screenshots', 'sec.batch':'Add in bulk (multi-select; matched to entries by filename)',
+ 'sec.hero':'Section hero image', 'sec.heroCap':'Hero caption',
+ 'sec.heroDel':'Remove hero', 'sec.shotsDel':'Clear screenshots',
+ 'sec.rows':'Entries (per line: name ⇥ subtitle ⇥ link — paste straight from Excel to replace)',
+ 'sec.regions':'Regions (first line: <b>flag Region ## target count ## link</b>, then one outlet per line; separate regions with <b>---</b>)',
+ 'sec.social':'Share buttons (per line: name ⇥ link)',
+ 'sum.titleStat':'Title stats', 'sum.titleText':'Title text', 'sum.textStat':'Body stats', 'sum.textExcerpt':'Body excerpt',
+ 'sum.anchors':'Keyword anchor text links (per line: text ⇥ URL)', 'sum.others':'Other links (one per line)',
+ 'sum.images':'Embedded images (per line: name ⇥ caption ⇥ full-size URL)', 'sum.videos':'Embedded videos',
+ 'doc.toc':'Contents', 'doc.index':'Appendix · Link Index',
+ 'doc.idxName':'Name', 'doc.idxUrl':'URL',
+ 'doc.tName':'Name', 'doc.tSub':'Note', 'doc.tShot':'Screenshot', 'doc.tLink':'Link',
+ 'doc.drop':'Drop an image / click then Ctrl+V',
+ 'doc.foot':(l,g,p,s)=>`${l} links · ${g} logos · ${p} images · ${s} sections`,
+ 'st.imgs':(n,sz)=>`Image store: ${n} files · ${sz} (in browser IndexedDB, resized to 1400px wide on import)`,
+ 'st.lib':(n,m)=>`Logo library: ${n} outlets / ${m} logos. Paste a link and the logo is matched by domain.`,
+ 'st.noLib':'No logo library yet. Put a distribution-report PDF in this folder and run <b>python extract_logos.py</b> to generate logos.js, then reload — pasting a link will then fill in the logo automatically.',
+ 'st.libN':n=>n?`(${n} in library)`:'(library empty)',
+ 'st.count':(s,l,g,p)=>`(${s} sections / ${l} links / ${g} logos / ${p} screenshots)`,
+ 'a.noData':'No data yet — paste a table first.',
+ 'a.noLib':'No logo library yet.\n\nPut a distribution-report PDF in the pr-link-report folder and run:\n  python extract_logos.py\nThen reload this page.',
+ 'a.noLibShort':'No logo library yet. Run extract_logos.py to generate logos.js, as described in the sidebar.',
+ 'a.matchSec':(n,h)=>`${h} of ${n} entries matched in this section.`,
+ 'a.matchAll':(n,h)=>`${h} of ${n} entries matched. The rest are domains not yet in the library — run another report PDF through extract_logos.py to extend it.`,
+ 'a.delSec':'Delete this section?', 'a.delShots':'Clear all screenshots in this section? (logos are kept)',
+ 'a.reset':'Clear everything? (the image store is kept)',
+ 'a.switchShot':(m,t)=>`${m} of ${t} images matched. Switch this section to the “Screenshots · 2 columns” layout to show them large?`,
+ 'a.pickFirst':'Click the entry you want to illustrate first, then press Ctrl+V.',
+ 'a.copied':'Copied. Press Ctrl+V in Google Docs — the hyperlinks are preserved.',
+ 'a.copied2':'Copied — paste it into Google Docs.',
+ 'a.copyFail':'Copy failed. Use “Download .doc” instead.',
+ 'a.imgNote':'\n\nNote: whether images travel with the paste depends on the browser. If they do not, use “Export all screenshots” and insert them manually.',
+ 'a.noShots':'No screenshots added yet. (Original logo files live in the logos/ folder.)',
+ 'a.shotsGo':n=>`${n} image files will download one by one. Your browser may ask to allow multiple downloads — choose Allow. Continue?`,
+ 'a.loadFail':m=>'Could not parse the file: '+m,
+ 'lay.c1':'Cards · 1 column','lay.c2':'Cards · 2 columns (name + location + logo)','lay.c3':'Cards · 3 columns','lay.c4':'Cards · 4 columns',
+ 'lay.t4':'Brand tiles · 4 columns (logo centred)','lay.t3':'Brand tiles · 3 columns','lay.t2':'Brand tiles · 2 columns',
+ 'lay.s1':'Screenshots · 1 large column','lay.s2':'Screenshots · 2 columns','lay.s3':'Screenshots · 3 columns',
+ 'lay.list':'Link list · 3 columns','lay.chips':'Pills','lay.table':'Table (with screenshot column)',
+ 'new.section':'New section','new.group':'New section',
+ 'def.title':'Press Release Distribution Report',
+ 'def.intro':'Below is where this release was picked up and indexed. Click any entry to open the corresponding article.'
+}};
+
+let LANG = 'zh';
+try{ LANG = localStorage.getItem('pr-report-lang') === 'en' ? 'en' : 'zh'; }catch(e){}
+/** 取文案；值是函数时按参数调用 */
+function t(key, ...args){
+  const v = (I18N[LANG] && I18N[LANG][key]) ?? I18N.zh[key] ?? key;
+  return typeof v === 'function' ? v(...args) : v;
+}
+function applyLang(){
+  document.documentElement.lang = t('html.lang');
+  document.title = t('app.title');
+  document.querySelectorAll('[data-i18n]').forEach(n=> n.textContent = t(n.dataset.i18n));
+  document.querySelectorAll('[data-i18n-html]').forEach(n=> n.innerHTML = t(n.dataset.i18nHtml));
+  document.querySelectorAll('[data-i18n-ph]').forEach(n=> n.placeholder = t(n.dataset.i18nPh));
+  document.querySelectorAll('#langsw button').forEach(b=> b.classList.toggle('on', b.dataset.lang === LANG));
+  Object.keys(LAYOUT_LABELS).forEach(k=> LAYOUT_LABELS[k] = t('lay.'+k));
+  const sel = document.getElementById('mLayout');
+  const keep = sel.value || 'c2';
+  sel.innerHTML = Object.entries(LAYOUT_LABELS).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');
+  sel.value = keep;
+}
+function setLang(l){
+  LANG = (l === 'en') ? 'en' : 'zh';
+  try{ localStorage.setItem('pr-report-lang', LANG); }catch(e){}
+  applyLang();
+  render();
+}
+document.getElementById('langsw').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-lang]');
+  if(b) setLang(b.dataset.lang);
+});
+
 /* =========================================================
    0. 图片仓库：IndexedDB（localStorage 放不下截图）
    ========================================================= */
@@ -529,15 +731,12 @@ function bytesOf(dataUrl){ return Math.round((dataUrl.length - dataUrl.indexOf('
 function updateStoreInfo(){
   const n = Object.keys(IMG).length;
   const kb = Object.values(IMG).reduce((a,b)=>a+bytesOf(b),0)/1024;
-  document.getElementById('storeInfo').textContent =
-    `图片仓库：${n} 张 · ${kb>1024 ? (kb/1024).toFixed(1)+' MB' : Math.round(kb)+' KB'}（存于浏览器 IndexedDB，导入时已压到宽 1400px）`;
-
-  const info = LOGOS.count
-    ? `Logo 图库：${LOGOS.count} 家媒体 / ${LOGOS.withLogo} 张 logo。粘贴链接即按域名自动配图。`
-    : `尚无 Logo 图库。把传播报告 PDF 放进本文件夹，运行 <b>python extract_logos.py</b> 生成 logos.js 后刷新，即可实现「粘贴链接自动出图」。`;
-  document.getElementById('libTip').innerHTML = info;
+  const size = kb>1024 ? (kb/1024).toFixed(1)+' MB' : Math.round(kb)+' KB';
+  document.getElementById('storeInfo').textContent = t('st.imgs', n, size);
+  document.getElementById('libTip').innerHTML =
+    LOGOS.count ? t('st.lib', LOGOS.count, LOGOS.withLogo) : t('st.noLib');
   const li = document.getElementById('libInfo');
-  if(li) li.textContent = LOGOS.count ? `（图库 ${LOGOS.count} 家）` : '（图库为空）';
+  if(li) li.textContent = t('st.libN', LOGOS.count);
 }
 
 /* =========================================================
@@ -555,9 +754,9 @@ function defaultState(){
     brand:'ETB STARR CONSULTING',
     tagline:'Brand Communications & Media Advisory',
     logo:'', cover:'', coverCap:'',
-    title:'新闻稿发布传播报告',
+    title:t('def.title'),
     subtitle:'Distributed on ' + new Date().toISOString().slice(0,10),
-    intro:'以下为本次新闻稿的媒体转载与收录情况。点击各条目名称即可跳转至对应报道页面。',
+    intro:t('def.intro'),
     footer:'contact@starrconsulting.com',
     navy:'#1b2a4e', accent:'#e2245e',
     toc:true, linkIndex:false,
@@ -695,7 +894,7 @@ function rowHtml(sid, i, r, layout){
     // 没有截图时用 logo 顶上，但必须完整显示 + 留白，不能像截图那样裁切铺满
     const frame = src
       ? `<span class="frame${shot?'':' logo-bg'}"><img class="${shot?'':'as-logo'}" src="${esc(src)}" alt=""></span>`
-      : `<span class="frame empty noprint">拖入图片 / 点击后 Ctrl+V</span>`;
+      : `<span class="frame empty noprint">${esc(t('doc.drop'))}</span>`;
     const inner = url ? `<a href="${esc(url)}" style="display:block">${frame}</a>` : frame;
     return `<figure class="shot" ${bind}>${inner}<figcaption>${nameEl}${subEl}</figcaption></figure>`;
   }
@@ -768,7 +967,7 @@ function linksSectionHtml(s, wrap){
   if(isTile(s.layout))        body = `<div class="tiles ${s.layout}">${rows.map((r,i)=>rowHtml(s.id,i,r,s.layout)).join('')}</div>`;
   else if(s.layout==='list')  body = `<ul class="linklist">${rows.map((r,i)=>rowHtml(s.id,i,r,'list')).join('')}</ul>`;
   else if(s.layout==='chips') body = `<div class="chips">${rows.map((r,i)=>rowHtml(s.id,i,r,'chips')).join('')}</div>`;
-  else if(s.layout==='table') body = `<table class="tbl"><thead><tr><th>名称</th><th>说明</th><th>截图</th><th>链接</th></tr></thead><tbody>${rows.map((r,i)=>rowHtml(s.id,i,r,'table')).join('')}</tbody></table>`;
+  else if(s.layout==='table') body = `<table class="tbl"><thead><tr><th>${esc(t('doc.tName'))}</th><th>${esc(t('doc.tSub'))}</th><th>${esc(t('doc.tShot'))}</th><th>${esc(t('doc.tLink'))}</th></tr></thead><tbody>${rows.map((r,i)=>rowHtml(s.id,i,r,'table')).join('')}</tbody></table>`;
   else                        body = `<div class="cards ${s.layout}">${rows.map((r,i)=>rowHtml(s.id,i,r,s.layout)).join('')}</div>`;
 
   const heroSrc = imgSrc(s.hero);
@@ -788,7 +987,7 @@ function render(){
   document.documentElement.style.setProperty('--accent', state.accent);
 
   const toc = state.toc && state.sections.length ? `<div class="toc">
-      <h3>目录 Contents</h3>
+      <h3>${esc(t('doc.toc'))}</h3>
       <ol>${state.sections.map(s=>`<li><a href="#sec-${s.id}">${esc(s.title)}</a></li>`).join('')}</ol>
     </div>` : '';
 
@@ -798,8 +997,8 @@ function render(){
     }</figure>` : '';
 
   const idx = state.linkIndex ? `<div class="section">
-      <div class="sec-bar">附录：链接清单 Link Index</div>
-      <table class="tbl"><thead><tr><th style="width:26%">名称</th><th>URL</th></tr></thead><tbody>
+      <div class="sec-bar">${esc(t('doc.index'))}</div>
+      <table class="tbl"><thead><tr><th style="width:26%">${esc(t('doc.idxName'))}</th><th>${esc(t('doc.idxUrl'))}</th></tr></thead><tbody>
       ${state.sections.flatMap(s=>s.rows.filter(r=>normUrl(r.url)).map(r=>
         `<tr><td>${esc(r.name)}</td><td style="word-break:break-all;font-size:11px"><a href="${esc(normUrl(r.url))}">${esc(normUrl(r.url))}</a></td></tr>`)).join('')}
       </tbody></table></div>` : '';
@@ -816,7 +1015,7 @@ function render(){
     ${toc}
     ${state.sections.map(sectionHtml).join('')}
     ${idx}
-    <div class="doc-foot"><span>${esc(state.footer)}</span><span>共 ${totalLinks()} 条链接 · ${totalLogos()} 个 logo · ${totalShots()} 张图 · ${state.sections.length} 个分组</span></div>`;
+    <div class="doc-foot"><span>${esc(state.footer)}</span><span>${esc(t('doc.foot', totalLinks(), totalLogos(), totalShots(), state.sections.length))}</span></div>`;
 
   markSelection();
   renderPanel();
@@ -934,7 +1133,7 @@ document.addEventListener('paste', async e=>{
   const item = [...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));
   if(!item) return;
   const r = rowOf(selected);
-  if(!r){ alert('先在右侧点一下要配图的条目，再 Ctrl+V。'); return; }
+  if(!r){ alert(t('a.pickFirst')); return; }
   e.preventDefault();
   r.img = await storeImg(item.getAsFile());
   render();
@@ -966,17 +1165,11 @@ async function assignByName(s, files){
 /* =========================================================
    6. 左侧分组面板
    ========================================================= */
-const LAYOUT_LABELS = {
-  c1:'卡片 · 1 列', c2:'卡片 · 2 列（名称+地区+logo）', c3:'卡片 · 3 列', c4:'卡片 · 4 列',
-  t4:'品牌方块 · 4 列（logo 居中）', t3:'品牌方块 · 3 列', t2:'品牌方块 · 2 列',
-  s1:'截图 · 大图 1 列', s2:'截图 · 2 列', s3:'截图 · 3 列',
-  list:'链接列表 · 3 列', chips:'圆角标签', table:'表格（含截图列）'
-};
-document.getElementById('mLayout').innerHTML =
-  Object.entries(LAYOUT_LABELS).map(([k,v])=>`<option value="${k}" ${k==='c2'?'selected':''}>${v}</option>`).join('');
+const LAYOUT_LABELS = {c1:'',c2:'',c3:'',c4:'',t4:'',t3:'',t2:'',s1:'',s2:'',s3:'',list:'',chips:'',table:''};
 
 function renderPanel(){
-  document.getElementById('secCount').textContent = `（${state.sections.length} 组 / ${totalLinks()} 链接 / ${totalLogos()} logo / ${totalShots()} 截图）`;
+  document.getElementById('secCount').textContent =
+    t('st.count', state.sections.length, totalLinks(), totalLogos(), totalShots());
   const open = [...document.querySelectorAll('.sec-item.open')].map(n=>n.dataset.sid);
   document.getElementById('secList').innerHTML = state.sections.map((s,i)=>`
     <div class="sec-item ${open.includes(s.id)?'open':''}" data-sid="${s.id}">
@@ -989,29 +1182,29 @@ function renderPanel(){
         <button data-act="del" class="danger">✕</button>
       </div>
       <div class="sec-body">
-        <label>标题</label><input type="text" data-act="title" value="${esc(s.title)}">
-        <label>说明文字</label><textarea data-act="desc" rows="2">${esc(s.desc||'')}</textarea>
+        <label>${esc(t('sec.title'))}</label><input type="text" data-act="title" value="${esc(s.title)}">
+        <label>${esc(t('sec.desc'))}</label><textarea data-act="desc" rows="2">${esc(s.desc||'')}</textarea>
         ${s.type && s.type!=='links' ? typeBodyHtml(s) : `
-        <label>版式</label>
+        <label>${esc(t('sec.layout'))}</label>
         <select data-act="layout">${Object.entries(LAYOUT_LABELS).map(([k,v])=>`<option value="${k}" ${s.layout===k?'selected':''}>${v}</option>`).join('')}</select>
 
         <div class="btnrow">
-          <button data-act="match" style="font-size:12px;padding:4px 9px">🔎 本组匹配 Logo</button>
-          <button data-act="logoDel" style="font-size:12px;padding:4px 9px">清空本组 Logo</button>
+          <button data-act="match" style="font-size:12px;padding:4px 9px">${esc(t('sec.match'))}</button>
+          <button data-act="logoDel" style="font-size:12px;padding:4px 9px">${esc(t('sec.logoDel'))}</button>
         </div>
 
-        <p class="sub-h">🖼 截图</p>
-        <label>批量添加（可多选，按文件名自动匹配条目）</label>
+        <p class="sub-h">${esc(t('sec.shots'))}</p>
+        <label>${esc(t('sec.batch'))}</label>
         <input type="file" data-act="shots" accept="image/*" multiple>
-        <label>本组大图 / 头图</label>
+        <label>${esc(t('sec.hero'))}</label>
         <input type="file" data-act="hero" accept="image/*">
-        <input type="text" data-act="heroCap" placeholder="大图说明文字" value="${esc(s.heroCap||'')}" style="margin-top:6px">
+        <input type="text" data-act="heroCap" placeholder="${esc(t('sec.heroCap'))}" value="${esc(s.heroCap||'')}" style="margin-top:6px">
         <div class="btnrow">
-          <button data-act="heroDel" style="font-size:12px;padding:4px 9px">移除大图</button>
-          <button data-act="shotsDel" style="font-size:12px;padding:4px 9px">清空本组截图</button>
+          <button data-act="heroDel" style="font-size:12px;padding:4px 9px">${esc(t('sec.heroDel'))}</button>
+          <button data-act="shotsDel" style="font-size:12px;padding:4px 9px">${esc(t('sec.shotsDel'))}</button>
         </div>
 
-        <label style="margin-top:12px">条目（每行：名称 ⇥ 副标题 ⇥ 链接，可直接从 Excel 粘贴覆盖）</label>
+        <label style="margin-top:12px">${esc(t('sec.rows'))}</label>
         <textarea data-act="rows" rows="6">${esc(s.rows.map(r=>[r.name,r.sub||'',r.url||''].join('\t')).join('\n'))}</textarea>`}
       </div>
     </div>`).join('');
@@ -1023,27 +1216,27 @@ function typeBodyHtml(s){
     const txt = (s.regions||[]).map(g=>
       `${g.flag||''} ${g.name||''} ## ${g.count||''} ## ${g.url||''}\n${(g.names||[]).join('\n')}`
     ).join('\n---\n');
-    return `<label>各地区名录（首行格式：<b>旗帜 地区名 ## 目标数说明 ## 链接</b>，其下每行一家媒体；地区之间用 <b>---</b> 分隔）</label>
+    return `<label>${t('sec.regions')}</label>
       <textarea data-act="regions" rows="12">${esc(txt)}</textarea>`;
   }
   if(s.type === 'social'){
-    return `<label>分享入口（每行：名称 ⇥ 链接）</label>
+    return `<label>${esc(t('sec.social'))}</label>
       <textarea data-act="rows" rows="5">${esc(s.rows.map(r=>[r.name,r.url||''].join('\t')).join('\n'))}</textarea>`;
   }
   if(s.type === 'summary'){
     const f = s.summary || {};
-    return `<label>标题统计</label><input type="text" data-act="sum.titleStat" value="${esc(f.titleStat||'')}" placeholder="15 words, 93 characters">
-      <label>标题原文</label><textarea data-act="sum.titleText" rows="2">${esc(f.titleText||'')}</textarea>
-      <label>正文统计</label><input type="text" data-act="sum.textStat" value="${esc(f.textStat||'')}" placeholder="820 words, 6094 characters">
-      <label>正文摘录</label><textarea data-act="sum.textExcerpt" rows="4">${esc(f.textExcerpt||'')}</textarea>
-      <label>关键词锚文本链接（每行：文字 ⇥ 链接）</label>
+    return `<label>${esc(t('sum.titleStat'))}</label><input type="text" data-act="sum.titleStat" value="${esc(f.titleStat||'')}" placeholder="15 words, 93 characters">
+      <label>${esc(t('sum.titleText'))}</label><textarea data-act="sum.titleText" rows="2">${esc(f.titleText||'')}</textarea>
+      <label>${esc(t('sum.textStat'))}</label><input type="text" data-act="sum.textStat" value="${esc(f.textStat||'')}" placeholder="820 words, 6094 characters">
+      <label>${esc(t('sum.textExcerpt'))}</label><textarea data-act="sum.textExcerpt" rows="4">${esc(f.textExcerpt||'')}</textarea>
+      <label>${esc(t('sum.anchors'))}</label>
       <textarea data-act="sum.anchors" rows="3">${esc((f.anchors||[]).map(a=>[a.text,a.url].join('\t')).join('\n'))}</textarea>
-      <label>其他链接（每行一条）</label>
+      <label>${esc(t('sum.others'))}</label>
       <textarea data-act="sum.others" rows="3">${esc((f.others||[]).join('\n'))}</textarea>
-      <label>嵌入图片（每行：名称 ⇥ 图说 ⇥ 原图链接）</label>
+      <label>${esc(t('sum.images'))}</label>
       <textarea data-act="sum.images" rows="3">${esc((f.images||[]).map(i=>[i.name,i.caption,i.url||''].join('\t')).join('\n'))}</textarea>
       <input type="file" data-act="sumImgs" accept="image/*" multiple style="margin-top:6px">
-      <label>嵌入视频数</label><input type="text" data-act="sum.videos" value="${esc(String(f.videos||0))}">`;
+      <label>${esc(t('sum.videos'))}</label><input type="text" data-act="sum.videos" value="${esc(String(f.videos||0))}">`;
   }
   return '';
 }
@@ -1055,18 +1248,18 @@ document.getElementById('secList').addEventListener('click', e=>{
   const s = state.sections[i];
   switch(btn.dataset.act){
     case 'toggle': item.classList.toggle('open'); return;
-    case 'del': if(confirm('删除该分组？')){ state.sections.splice(i,1); selected=null; render(); } return;
+    case 'del': if(confirm(t('a.delSec'))){ state.sections.splice(i,1); selected=null; render(); } return;
     case 'up':   if(i>0){ state.sections.splice(i-1,0,state.sections.splice(i,1)[0]); render(); } return;
     case 'down': if(i<state.sections.length-1){ state.sections.splice(i+1,0,state.sections.splice(i,1)[0]); render(); } return;
     case 'heroDel':  s.hero=''; render(); return;
-    case 'shotsDel': if(confirm('清空本组所有条目截图？（logo 保留）')){ s.rows.forEach(r=>r.img=''); render(); } return;
+    case 'shotsDel': if(confirm(t('a.delShots'))){ s.rows.forEach(r=>r.img=''); render(); } return;
     case 'logoDel':  s.rows.forEach(r=>r.logo=''); render(); return;
     case 'match': {
-      if(!LOGOS.count){ alert('还没有 Logo 图库。请先按侧栏提示运行 extract_logos.py 生成 logos.js。'); return; }
+      if(!LOGOS.count){ alert(t('a.noLibShort')); return; }
       let hit = 0;
       s.rows.forEach(r=>{ const b=r.logo, n=r.name; enrich(r, true); if(r.logo!==b || r.name!==n) hit++; });
       render();
-      alert(`本组 ${s.rows.length} 条，匹配上 ${hit} 条。`);
+      alert(t('a.matchSec', s.rows.length, hit));
       return;
     }
   }
@@ -1089,7 +1282,7 @@ document.getElementById('secList').addEventListener('change', async e=>{
     if(!s.heroCap) s.heroCap = '';
   } else {
     const {matched,total} = await assignByName(s, files.filter(f=>f.type.startsWith('image/')));
-    if(!isShot(s.layout) && confirm(`已匹配 ${matched}/${total} 张。是否把本组切换为「截图 · 2 列」版式以显示大图？`)) s.layout='s2';
+    if(!isShot(s.layout) && confirm(t('a.switchShot', matched, total))) s.layout='s2';
   }
   render();
 });
@@ -1212,13 +1405,13 @@ function reparse(){
 
 function fillSelects(){
   const opts = allowNone => {
-    let h = allowNone ? '<option value="-1">（不使用）</option>' : '';
+    let h = allowNone ? `<option value="-1">${esc(t('m.none'))}</option>` : '';
     if(importData) h += importData.headers.map((x,i)=>`<option value="${i}">${esc(x)}</option>`).join('');
     return h;
   };
   ['mName','mSub','mUrl','mImg','mGroup'].forEach(id => { $(id).innerHTML = opts(id!=='mName'); });
-  $('mTarget').innerHTML = '<option value="__new">新建分组</option>' +
-    state.sections.map(s=>`<option value="${s.id}">追加到：${esc(s.title)}</option>`).join('');
+  $('mTarget').innerHTML = `<option value="__new">${esc(t('m.new'))}</option>` +
+    state.sections.map(s=>`<option value="${s.id}">${esc(t('m.appendTo') + s.title)}</option>`).join('');
   if(importData){
     const m = guessMap(importData);
     $('mName').value  = m.name;
@@ -1233,14 +1426,15 @@ function fillSelects(){
 function drawPreview(){
   if(!importData){ $('prevBox').innerHTML=''; return; }
   const g = id => +$(id).value;
-  const cols = [['名称',g('mName')],['副标题',g('mSub')],['链接',g('mUrl')],['图片',g('mImg')],['分组',g('mGroup')]].filter(c=>c[1]>=0);
+  const cols = [[t('m.pName'),g('mName')],[t('m.pSub'),g('mSub')],[t('m.pUrl'),g('mUrl')],
+                [t('m.pImg'),g('mImg')],[t('m.pGroup'),g('mGroup')]].filter(c=>c[1]>=0);
   $('prevBox').innerHTML = `<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
-    ${importData.rows.slice(0,40).map(r=>`<tr>${cols.map(c=>`<td class="${c[0]==='链接'?'lk':''}">${esc(r[c[1]]||'')}</td>`).join('')}</tr>`).join('')}
+    ${importData.rows.slice(0,40).map(r=>`<tr>${cols.map(c=>`<td class="${c[0]===t('m.pUrl')?'lk':''}">${esc(r[c[1]]||'')}</td>`).join('')}</tr>`).join('')}
   </tbody></table>`;
 }
 
 $('btnDoImport').onclick = ()=>{
-  if(!importData || !importData.rows.length){ alert('还没有数据，请先粘贴表格。'); return; }
+  if(!importData || !importData.rows.length){ alert(t('a.noData')); return; }
   const [ni,si,ui,ii,gr] = ['mName','mSub','mUrl','mImg','mGroup'].map(id=>+$(id).value);
   const layout = $('mLayout').value;
   const auto = $('mAuto').checked;
@@ -1276,21 +1470,23 @@ $('btnDoImport').onclick = ()=>{
 /* =========================================================
    9. 分组 / 示例 / 存档
    ========================================================= */
-const BLANK_SECTION = {
-  links:     {title:'新分组', layout:'c2'},
-  directory: {title:'World Media Directory 世界媒体名录',
-              desc:'以下为我们用于触达记者的媒体目标清单。是否刊发由各媒体自行决定。',
+const BLANK_SECTION = ()=>({
+  links:     {title:t('new.group'), layout:'c2'},
+  directory: {title:'World Media Directory',
+              desc:LANG==='en' ? 'Below is the media target list we used to reach journalists.'
+                               : '以下为我们用于触达记者的媒体目标清单。是否刊发由各媒体自行决定。',
               regions:[{flag:'🇺🇸', name:'United States', count:'211 targets including :', url:'', names:[]}]},
-  social:    {title:'Boost your reach 分享到社交媒体', desc:'一键分享您的新闻稿。',
+  social:    {title:'Boost your reach',
+              desc:LANG==='en' ? 'Share your press release with one click.' : '一键分享您的新闻稿。',
               rows:['Facebook','X/Twitter','LinkedIn','Bluesky'].map(n=>({name:n,sub:'',url:'',img:'',logo:''}))},
-  summary:   {title:'Report Summary 报告摘要',
+  summary:   {title:'Report Summary',
               summary:{titleStat:'', titleText:'', textStat:'', textExcerpt:'', anchors:[], others:[], images:[], videos:0}}
-};
+});
 $('btnAddSec').onclick = ()=>{
-  const t = $('newType').value;
+  const ty = $('newType').value;
   state.sections.push(Object.assign(
-    {id:uid(), type:t, title:'新区块', desc:'', layout:'c2', hero:'', heroCap:'', rows:[], regions:[], summary:null},
-    BLANK_SECTION[t]
+    {id:uid(), type:ty, title:t('new.section'), desc:'', layout:'c2', hero:'', heroCap:'', rows:[], regions:[], summary:null},
+    BLANK_SECTION()[ty]
   ));
   render();
   const it = document.querySelector(`.sec-item[data-sid="${state.sections[state.sections.length-1].id}"]`);
@@ -1299,7 +1495,7 @@ $('btnAddSec').onclick = ()=>{
 
 $('btnMatch').onclick = ()=>{
   if(!LOGOS.count){
-    alert('还没有 Logo 图库。\n\n把传播报告 PDF 放进 pr-link-report 文件夹，运行：\n  python extract_logos.py\n生成 logos.js 后刷新本页即可。');
+    alert(t('a.noLib'));
     return;
   }
   let total = 0, hit = 0;
@@ -1309,7 +1505,7 @@ $('btnMatch').onclick = ()=>{
     if(r.logo) hit++;
   }));
   render();
-  alert(`共 ${total} 条，匹配上 ${hit} 条。未匹配的多半是图库里没收录的域名，可再跑一份别的报告 PDF 扩充图库。`);
+  alert(t('a.matchAll', total, hit));
 };
 
 $('btnDemo').onclick = ()=>{
@@ -1401,11 +1597,11 @@ $('fProj').onchange = e=>{
       selected = null;
       normalizeState();
       syncFields(); render();
-    }catch(err){ alert('文件解析失败：' + err.message); }
+    }catch(err){ alert(t('a.loadFail', err.message)); }
   };
   rd.readAsText(f);
 };
-$('btnReset').onclick = ()=>{ if(confirm('清空全部内容？（图片仓库保留）')){ state = defaultState(); selected=null; syncFields(); render(); } };
+$('btnReset').onclick = ()=>{ if(confirm(t('a.reset'))){ state = defaultState(); selected=null; syncFields(); render(); } };
 
 /* =========================================================
    10. 导出
@@ -1528,13 +1724,13 @@ function toDocHtml(){
 
 $('btnCopyDoc').onclick = async ()=>{
   const html = toDocHtml();
-  const note = totalShots() ? '\n\n注意：截图能否随粘贴一起进入 Google Docs 取决于浏览器，若图片没过去，用「导出全部截图」拿到原图再手动插入。' : '';
+  const note = totalShots() ? t('a.imgNote') : '';
   try{
     await navigator.clipboard.write([new ClipboardItem({
       'text/html' : new Blob([html],{type:'text/html'}),
       'text/plain': new Blob([html.replace(/<[^>]+>/g,' ')],{type:'text/plain'})
     })]);
-    alert('已复制。到 Google Docs 里 Ctrl+V 粘贴，超链接会完整保留。' + note);
+    alert(t('a.copied') + note);
   }catch(err){
     const d = document.createElement('div');
     d.innerHTML = html; d.style.cssText='position:fixed;left:-9999px;top:0';
@@ -1543,7 +1739,7 @@ $('btnCopyDoc').onclick = async ()=>{
     const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg);
     const ok = document.execCommand('copy');
     sel.removeAllRanges(); d.remove();
-    alert(ok ? '已复制，去 Google Docs 粘贴即可。' + note : '复制失败，请改用「下载 .doc」。');
+    alert(ok ? t('a.copied2') + note : t('a.copyFail'));
   }
 };
 
@@ -1570,8 +1766,8 @@ $('btnShots').onclick = async ()=>{
     if(s.hero) items.push([`${String(si+1).padStart(2,'0')}_00_${s.title}_大图`, s.hero]);
     s.rows.forEach((r,ri)=>{ if(r.img) items.push([`${String(si+1).padStart(2,'0')}_${String(ri+1).padStart(2,'0')}_${r.name}`, r.img]); });
   });
-  if(!items.length){ alert('还没有添加任何截图。（图库 logo 的原图在 logos/ 目录里）'); return; }
-  if(!confirm(`将逐个下载 ${items.length} 个图片文件，浏览器可能会询问「允许多文件下载」，请选允许。继续？`)) return;
+  if(!items.length){ alert(t('a.noShots')); return; }
+  if(!confirm(t('a.shotsGo', items.length))) return;
   for(const [name, ref] of items){
     const src = imgSrc(ref);
     if(!src) continue;
@@ -1611,6 +1807,7 @@ function download(name, content, type){
   }catch(e){}
   normalizeState();
   if(LOGOS.count) enrichAll(false);          // 图库更新后，老项目自动补上新收录的 logo
+  applyLang();
   syncFields();
   if(!state.sections.length) document.getElementById('btnDemo').click(); else render();
 })();
