@@ -25,12 +25,13 @@ HEADER_SIZE, WHITE = 10.5, 16777215
 COL_X = (50.9, 231.2, 411.4)
 SUBHEAD = re.compile(r"(.+?)\s+Distribution Channel$")
 
+# 版式；标题一律沿用原报告的英文原文，不做任何增删
 LAYOUT = {
-    "Major newswires":               ("t4", "Major newswires 主要通讯社"),
-    "Search engines & AI databases": ("t4", "Search engines & AI databases 搜索引擎与 AI 数据库"),
-    "News Databases":                ("t3", "News Databases 专业新闻数据库"),
-    "Major News Platforms":          ("c2", "Major News Platforms 独立媒体转载"),
-    "Affinity Group Publications":   ("c2", "Affinity Group Publications 垂直媒体网络"),
+    "Major newswires":               "t4",
+    "Search engines & AI databases": "t4",
+    "News Databases":                "t3",
+    "Major News Platforms":          "c2",
+    "Affinity Group Publications":   "c2",
 }
 
 
@@ -249,7 +250,7 @@ def build(pdf):
                 flag = {"China": "🇨🇳", "United States": "🇺🇸"}.get(region, "🗽")
                 regions.append({"flag": flag, "name": region, "count": count,
                                 "url": "", "names": names})
-            sections.append({"type": "directory", "title": "World Media Directory 世界媒体名录",
+            sections.append({"type": "directory", "title": title,
                              "desc": desc, "regions": regions})
             continue
 
@@ -257,39 +258,38 @@ def build(pdf):
             soc = [l for l in links if start < (l["p"], l["y"]) < end
                    and re.search(r"facebook|x\.com|linkedin|bsky", l["uri"])]
             names = ["Facebook", "X/Twitter", "LinkedIn", "Bluesky"]
-            sections.append({"type": "social", "title": "Boost your reach 分享到社交媒体",
-                             "desc": desc,
+            sections.append({"type": "social", "title": title, "desc": desc,
                              "rows": [{"name": names[k] if k < len(names) else l["name"],
                                        "sub": "", "url": l["uri"], "img": "", "logo": ""}
                                       for k, l in enumerate(soc)]})
             continue
 
         if title.startswith("Report Summary"):
-            sections.append({"type": "summary", "title": "Report Summary 报告摘要",
+            sections.append({"type": "summary", "title": title,
                              "desc": "", "summary": build_summary(doc, stream)})
             continue
 
         if title.startswith("EIN Presswire newswires"):
+            # 原报告里这是一个大标题条 + 若干灰底子盒（各行业频道），保持同样的层级
             subs = between(stream, start, end, lambda it: SUBHEAD.match(it["t"]) and it["x"] < 70)
-            head_rows = [l for l in mine if (l["p"], l["y"]) < (subs[0]["p"], subs[0]["y"])] if subs else mine
-            if head_rows:                                    # 频道之前那几个 AGP 方块
-                sections.append({"type": "links", "title": "Affinity Group Publications（续）",
-                                 "desc": "", "layout": "c2",
-                                 "rows": [row(l, lib_hosts) for l in head_rows]})
+            head_rows = [l for l in mine if not subs or (l["p"], l["y"]) < (subs[0]["p"], subs[0]["y"])]
+            if head_rows:                                    # 频道之前那几个 AGP 方块，仍属上一板块
+                sections[-1]["rows"].extend(row(l, lib_hosts) for l in head_rows)
+            groups = []
             for j, sh in enumerate(subs):
                 s2 = (sh["p"], sh["y"])
                 e2 = (subs[j + 1]["p"], subs[j + 1]["y"]) if j + 1 < len(subs) else end
-                rows = [row(l, lib_hosts) for l in links
-                        if s2 < (l["p"], l["y"]) < e2 and not SKIP_URL.search(l["uri"])]
-                if rows:
-                    sections.append({"type": "links", "title": sh["t"], "desc": "",
-                                     "layout": "list", "rows": rows})
+                names = [{"n": l["name"], "u": l["uri"]} for l in links
+                         if s2 < (l["p"], l["y"]) < e2 and not SKIP_URL.search(l["uri"])]
+                if names:
+                    groups.append({"flag": "", "name": sh["t"], "count": "", "url": "", "names": names})
+            sections.append({"type": "directory", "title": title, "desc": desc, "regions": groups})
             continue
 
-        layout, zh = LAYOUT.get(title, ("c2", title))
         if mine:
-            sections.append({"type": "links", "title": zh, "desc": desc,
-                             "layout": layout, "rows": [row(l, lib_hosts) for l in mine]})
+            sections.append({"type": "links", "title": title, "desc": desc,
+                             "layout": LAYOUT.get(title, "c2"),
+                             "rows": [row(l, lib_hosts) for l in mine]})
 
     # 页头信息：标题取报告摘要里的原文，日期与开篇段落取首页
     p1 = doc[0].get_text("text")

@@ -919,12 +919,16 @@ function sectionHtml(s){
   return linksSectionHtml(s, wrap);
 }
 
+/* 灰底盒：世界媒体名录（纯文字条目）与 EIN 行业频道（带链接条目）共用 */
 function directoryHtml(s){
+  const item = n => typeof n === 'string'
+    ? `<span>${esc(n)}</span>`
+    : `<span>${n.u ? `<a href="${esc(normUrl(n.u))}">${esc(n.n)}</a>` : esc(n.n)}</span>`;
   return (s.regions||[]).map(g=>`<div class="dir-box">
     <div class="dir-head">${g.flag?`<span class="flag">${esc(g.flag)}</span>`:''}${
       g.url ? `<a href="${esc(normUrl(g.url))}">${esc(g.name)}</a>` : esc(g.name)}</div>
     ${g.count ? `<div class="dir-count">${esc(g.count)}</div>` : ''}
-    <div class="dir-names">${(g.names||[]).map(n=>`<span>${esc(n)}</span>`).join('')}</div>
+    <div class="dir-names">${(g.names||[]).map(item).join('')}</div>
   </div>`).join('');
 }
 
@@ -1214,7 +1218,8 @@ function renderPanel(){
 function typeBodyHtml(s){
   if(s.type === 'directory'){
     const txt = (s.regions||[]).map(g=>
-      `${g.flag||''} ${g.name||''} ## ${g.count||''} ## ${g.url||''}\n${(g.names||[]).join('\n')}`
+      `${g.flag||''} ${g.name||''} ## ${g.count||''} ## ${g.url||''}\n` +
+      (g.names||[]).map(n=> typeof n==='string' ? n : (n.u ? n.n+'\t'+n.u : n.n)).join('\n')
     ).join('\n---\n');
     return `<label>${t('sec.regions')}</label>
       <textarea data-act="regions" rows="12">${esc(txt)}</textarea>`;
@@ -1299,7 +1304,11 @@ document.getElementById('secList').addEventListener('input', e=>{
       if(!lines.length) return null;
       const [head, count, url] = lines[0].split('##').map(x=>(x||'').trim());
       const m = /^(\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]{2})\s*(.*)$/u.exec(head||'');
-      return {flag: m?m[1]:'', name: m?m[2]:(head||''), count: count||'', url: url||'', names: lines.slice(1)};
+      const names = lines.slice(1).map(ln=>{
+        const [n, u] = ln.split('\t');
+        return u ? {n:n.trim(), u:u.trim()} : ln;
+      });
+      return {flag: m?m[1]:'', name: m?m[2]:(head||''), count: count||'', url: url||'', names};
     }).filter(Boolean);
   } else if(act.startsWith('sum.')){
     const f = s.summary = s.summary || {};
@@ -1673,9 +1682,12 @@ function toDocHtml(){
         body += `<p style="margin:8pt 0 2pt"><b>${esc((g.flag?g.flag+' ':'')+g.name)}</b>${
           g.count?` <span style="font-size:9pt;color:#6b7280">${esc(g.count)}</span>`:''}</p>`;
         const n = g.names||[];
+        const cell = x => x == null ? ''
+          : '▪ ' + (typeof x === 'string' ? esc(x)
+                    : (x.u ? `<a href="${esc(normUrl(x.u))}">${esc(x.n)}</a>` : esc(x.n)));
         body += `<table width="100%" cellpadding="3" cellspacing="0" style="font-size:9pt;border-collapse:collapse">`;
         for(let i=0;i<n.length;i+=3){
-          body += '<tr>' + [0,1,2].map(c=>`<td width="33%">${n[i+c]?'▪ '+esc(n[i+c]):''}</td>`).join('') + '</tr>';
+          body += '<tr>' + [0,1,2].map(c=>`<td width="33%">${cell(n[i+c])}</td>`).join('') + '</tr>';
         }
         body += `</table>`;
       }
