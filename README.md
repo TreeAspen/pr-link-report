@@ -2,6 +2,8 @@
 
 **English** · [中文](README.zh.md)
 
+> **Live demo:** <https://treeaspen.github.io/pr-link-report/> — the hosted build ships with the logo library and the full sample report.
+
 Turn a spreadsheet — or just a list of URLs — into a press-release distribution report
 with clickable hyperlinks, outlet logos and page screenshots.
 Single file, runs in the browser, no server and no network required.
@@ -117,10 +119,10 @@ logos/                generated: individual PNG files
 sample.js             generated: the sample project
 ```
 
-Generated files are in `.gitignore`: `logos.js` and `logos/` hold third-party outlet logos,
-and `sample.js` holds a specific client's release content and photos. Generate them from your
-own reports rather than shipping them in the repo. Without those two files the tool falls back
-to a small built-in sample; nothing else changes.
+`logos.js` and `sample.js` are committed so the hosted demo works out of the box; `logos/`
+and `logos_manifest.json` are intermediates and are ignored (every image is already inlined in
+`logos.js`). Re-run the two scripts on your own reports to replace them. If either file is
+missing, the tool falls back to a small built-in sample and nothing else changes.
 
 ## Requirements
 
