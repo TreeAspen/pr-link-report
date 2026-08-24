@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>使用教程 · PR 链接报告生成器</title>
+<style>
+  :root{
+    --navy:#1b2a4e; --accent:#e2245e;
+    --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --bg:#f3f4f6;
+    --code-bg:#0f172a;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-size:15px; line-height:1.75;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+  }
+
+  /* ---------- 页头 ---------- */
+  header{background:var(--navy);color:#fff;padding:26px 0 22px;border-bottom:5px solid var(--accent)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .hd{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  header h1{margin:0;font-size:23px;letter-spacing:-.01em;flex:1;min-width:240px}
+  header p{margin:6px 0 0;font-size:13.5px;opacity:.8;flex-basis:100%}
+  .tools{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+  .langsw{display:flex;border:1px solid rgba(255,255,255,.35);border-radius:6px;overflow:hidden}
+  .langsw button{border:0;background:transparent;color:rgba(255,255,255,.75);padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer}
+  .langsw button.on{background:#fff;color:var(--navy);font-weight:700}
+  .openapp{
+    background:var(--accent);color:#fff;text-decoration:none;font-weight:700;font-size:13px;
+    padding:6px 13px;border-radius:6px;white-space:nowrap
+  }
+  .openapp:hover{filter:brightness(1.1)}
+
+  /* ---------- 版式 ---------- */
+  .cols{display:grid;grid-template-columns:216px 1fr;gap:34px;align-items:start;padding:30px 0 70px}
+  nav{position:sticky;top:22px;font-size:13px}
+  nav b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:9px}
+  nav a{display:block;color:#374151;text-decoration:none;padding:4px 9px;border-left:2px solid var(--line);line-height:1.45}
+  nav a:hover{color:var(--navy);background:#fff;border-left-color:var(--accent)}
+  main{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 40px 44px;min-width:0}
+
+  h2{
+    font-size:20px;margin:38px 0 12px;padding-top:14px;border-top:1px solid var(--line);
+    scroll-margin-top:20px;
+  }
+  h2:first-of-type{border-top:0;margin-top:22px}
+  h3{font-size:15.5px;margin:24px 0 8px}
+  p{margin:0 0 12px}
+  ul,ol{margin:0 0 12px;padding-left:22px}
+  li{margin-bottom:5px}
+  a{color:#1d4ed8}
+  strong{font-weight:700}
+  kbd{
+    background:#f3f4f6;border:1px solid #d1d5db;border-bottom-width:2px;border-radius:4px;
+    padding:1px 6px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace;white-space:nowrap
+  }
+  code{background:#f3f4f6;border-radius:3px;padding:1px 5px;font-size:13px;font-family:ui-monospace,Consolas,monospace}
+  pre{
+    background:var(--code-bg);color:#e2e8f0;border-radius:8px;padding:14px 16px;overflow-x:auto;
+    font-size:13px;line-height:1.65;margin:0 0 14px
+  }
+  pre code{background:none;padding:0;color:inherit;font-size:inherit}
+  pre .c{color:#7dd3fc}
+
+  table{border-collapse:collapse;width:100%;font-size:13.5px;margin:0 0 14px;display:block;overflow-x:auto}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:#f8fafc;font-size:12px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+
+  .note,.warn,.tip{border-radius:8px;padding:12px 15px;margin:0 0 14px;font-size:14px;line-height:1.7}
+  .note{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a}
+  .warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+  .tip{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+
+  .steps{counter-reset:s;list-style:none;padding:0}
+  .steps>li{counter-increment:s;position:relative;padding-left:40px;margin-bottom:16px}
+  .steps>li::before{
+    content:counter(s);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;
+    background:var(--navy);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center
+  }
+  .sheet{border-collapse:collapse;font-size:13px;width:auto;display:table}
+  .sheet th{background:#eef2f7;color:#334155;text-transform:none;letter-spacing:0;font-size:12.5px}
+  .sheet td{white-space:nowrap}
+
+  .lang{display:none}
+  .lang.on{display:block}
+  footer{border-top:1px solid var(--line);margin-top:30px;padding-top:16px;font-size:13px;color:var(--muted)}
+
+  @media (max-width:860px){
+    .cols{grid-template-columns:1fr;gap:16px}
+    nav{position:static}
+    nav a{display:inline-block;border:1px solid var(--line);border-radius:99px;margin:0 4px 6px 0}
+    main{padding:8px 20px 34px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hd">
+    <h1 id="pgTitle">PR 链接报告生成器 · 使用教程</h1>
+    <div class="tools">
+      <div class="langsw" id="langsw">
+        <button data-lang="zh">中文</button><button data-lang="en">EN</button>
+      </div>
+      <a class="openapp" href="index.html" id="openApp">打开工具 →</a>
+    </div>
+    <p id="pgSub">把 Excel 表格或一串链接，变成带可点击超链接、媒体 Logo 和页面截图的传播报告。</p>
+  </div>
+</header>
+
+<div class="wrap cols">
+  <nav id="toc"></nav>
+  <main>
+
+<!-- ==================== 中文 ==================== -->
+<div class="lang zh on">
+
+<h2 id="what">这是什么</h2>
+<p>一个单文件的网页工具。你把媒体名称和转载链接粘进去，它排成一份传播报告页，导出的 PDF 里
+<strong>每个媒体名都是可以点的超链接</strong>；也能复制进 Google Docs 继续编辑而链接不丢。</p>
+<p>如果你手上有 EIN Presswire 之类的分发报告 PDF，配套脚本能把里面的媒体 Logo 抽出来、和链接域名建立对应关系。
+之后你只要粘贴一串转载链接，<strong>媒体名称、所在地区、Logo 会自动补全</strong>。</p>
+<div class="note">工具完全在你自己的浏览器里跑，数据不上传任何服务器。关掉页面内容也还在（存在浏览器本地）。</div>
+
+<h2 id="start">三分钟上手</h2>
+<ol class="steps">
+  <li><strong>先看效果。</strong>点左栏「载入示例」，右侧会出现一份完整报告。随便点一段文字试试，可以直接改。</li>
+  <li><strong>换成你的数据。</strong>点「粘贴 Excel / 链接清单，批量导入」，把你的表格或链接粘进去，点「生成」。</li>
+  <li><strong>导出。</strong>点「打印 / 另存为 PDF」，在打印对话框里目标选「另存为 PDF」。链接在 PDF 里可以点。</li>
+</ol>
+<div class="tip">不确定从哪下手时，先「载入示例」，照着示例的结构改，比从空白开始快得多。</div>
+
+<h2 id="import">导入数据</h2>
+
+<h3>从 Excel 粘贴</h3>
+<p>在 Excel 或 Google Sheets 里选中区域 <kbd>Ctrl</kbd>+<kbd>C</kbd>，在弹窗的输入框里 <kbd>Ctrl</kbd>+<kbd>V</kbd>。
+列会自动识别，你在下拉框里确认一下就行。典型的表长这样：</p>
+<table class="sheet">
+  <tr><th>媒体名称</th><th>地区</th><th>链接</th><th>分组</th></tr>
+  <tr><td>WIVB CBS 4</td><td>Buffalo (NY)</td><td>https://www.wivb.com/…</td><td>独立媒体转载</td></tr>
+  <tr><td>WPIX CW 11</td><td>New York City (NY)</td><td>https://pix11.com/…</td><td>独立媒体转载</td></tr>
+  <tr><td>Google News</td><td></td><td>https://news.google.com/…</td><td>主要通讯社</td></tr>
+</table>
+<p>映射里的「<strong>分组</strong>」是关键：指定这一列后，一次粘贴会<strong>自动拆成多个板块</strong>，
+不用一组一组地导。</p>
+
+<h3>只有链接怎么办</h3>
+<p>直接粘一列光秃秃的链接就行。只要 Logo 图库里收录过这个域名，名称、地区、Logo 都会自己填上；
+没收录的会退而显示域名本身，你再手动改名。</p>
+
+<h3>名称单元格自带超链接</h3>
+<p>很多人的表是「媒体名上挂着超链接」而没有单独的 URL 列。这种也认得——粘贴时会自动把单元格里的
+超链接抽出来，在映射下拉框里显示成 <code>⟨某列 的超链接⟩</code>，选它即可。</p>
+
+<h3>列映射说明</h3>
+<table>
+  <tr><th>映射项</th><th>作用</th></tr>
+  <tr><td>名称</td><td>显示出来、可点击的文字，必填</td></tr>
+  <tr><td>副标题</td><td>名称下面的小灰字，一般放地区，如 <code>Buffalo (NY)</code></td></tr>
+  <tr><td>链接 URL</td><td>点击后跳转的地址</td></tr>
+  <tr><td>图片 URL</td><td>可选。若表里自带 Logo 图片地址</td></tr>
+  <tr><td>分组</td><td>可选。指定后按此列拆成多个板块</td></tr>
+</table>
+<p>已有板块也能追加：映射里不选分组列，在「无分组列时，写入」处选「追加到：某板块」。</p>
+
+<h2 id="layout">版式</h2>
+<p>每个板块可以单独换版式，在左栏板块的 ✎ 里改。</p>
+<table>
+  <tr><th>版式</th><th>长什么样</th><th>适合</th></tr>
+  <tr><td>品牌方块 2/3/4 列</td><td>有 Logo 就只显示 Logo，没有就显示加粗名称</td><td>通讯社、搜索引擎那种一排品牌方块</td></tr>
+  <tr><td>卡片 1–4 列</td><td>左边名称 + 地区，右边一个小 Logo</td><td>电视台、报纸这类长列表</td></tr>
+  <tr><td>截图 1/2/3 列</td><td>页面截图在上，名称地区在下，整张图可点</td><td>想展示实际转载页面时</td></tr>
+  <tr><td>链接列表 · 3 列</td><td>三栏项目符号链接，行优先排列</td><td>频道、栏目这类纯文字长清单</td></tr>
+  <tr><td>圆角标签</td><td>流式排列的小胶囊</td><td>关键词、标签类</td></tr>
+  <tr><td>表格</td><td>名称 / 说明 / 截图 / 链接四列</td><td>需要把完整 URL 也印出来时</td></tr>
+</table>
+<p>还有三种结构不同的区块，在「+ 新增」旁边的下拉框里选：</p>
+<ul>
+  <li><strong>世界媒体名录</strong>——灰底盒子，地区名 + 目标数 + 三栏媒体清单</li>
+  <li><strong>社交分享行</strong>——Facebook / X / LinkedIn / Bluesky 四格</li>
+  <li><strong>报告摘要面板</strong>——字数统计、锚文本链接、嵌入图片与图说</li>
+</ul>
+
+<h2 id="logos">Logo 图库</h2>
+<p>这是「粘贴链接自动出图」的来源。<strong>在线版已经内置</strong>，直接就能用；本地要自己生成一次：</p>
+<pre><code>pip install -r requirements.txt
+
+<span class="c"># 把你的传播报告 PDF 放进本目录，然后：</span>
+python extract_logos.py</code></pre>
+<p>脚本按 PDF 里链接注释的坐标定位每张媒体卡片，取出卡片内的 Logo、媒体名、所在地区，
+与跳转域名建立对应关系，写进 <code>logos.js</code>。刷新页面后侧栏会显示「Logo 图库：N 家媒体 / M 张 logo」。</p>
+<p>匹配顺序是：完整域名 → 逐级去掉子域 → 可注册域 → 媒体名称。<code>www.</code>、<code>m.</code>、<code>amp.</code> 这类前缀自动忽略。</p>
+<ul>
+  <li>多跑几份不同的报告，图库会<strong>自动合并去重、越攒越全</strong></li>
+  <li>名字抓错了，改 <code>logos_manifest.json</code> 再跑一次脚本重建</li>
+  <li>老项目想补 Logo，点「全文档按链接匹配 Logo」批量回填</li>
+</ul>
+
+<h2 id="shots">配截图</h2>
+<p>三种方式，随手用哪种都行：</p>
+<ol>
+  <li><strong>拖拽</strong>——图片文件直接拖到右侧某张卡片上。一次拖多张，从这张卡片起依次往下填</li>
+  <li><strong>粘贴</strong>——先点一下要配图的条目（底部会出现选中条），再 <kbd>Ctrl</kbd>+<kbd>V</kbd></li>
+  <li><strong>批量</strong>——在板块设置里一次选几十张，按文件名自动匹配条目</li>
+</ol>
+<p>文件名匹配的顺序：先精确匹配条目名称（忽略大小写和符号），再模糊包含匹配，
+再认 <code>01_xxx.png</code> 这样的前缀编号，最后剩下的按顺序补空位。
+所以把截图存成 <code>WPIX CW 11.png</code> 或 <code>03_xxx.png</code> 都能自动对上。</p>
+<div class="note">截图存在浏览器的 IndexedDB 里（localStorage 放不下），导入时自动压到宽 1400px。
+侧栏底部会显示当前占用了多少空间。</div>
+
+<h2 id="edit">编辑与主题</h2>
+<h3>就地改字</h3>
+<p>右侧预览里的标题、媒体名、地区都能直接点进去改，改完自动保存。
+注意：<strong>普通点击是编辑，<kbd>Ctrl</kbd>+点击才是跳转链接</strong>——否则点标题想改字会一直跳走。</p>
+<h3>主题配色</h3>
+<p>左栏「页头 / 品牌」里有一排配色方案，点一下整份报告的标题条和强调色就换了。
+默认是藏青 + 品红。想要别的颜色，用下面两个取色器自己调。</p>
+<h3>页头</h3>
+<p>品牌名、副标题、Logo（选本地图片，会内嵌进文件，不依赖外链）、封面大图、页脚都能改。
+勾上「生成目录」会在开头加一个目录，在 PDF 里点条目能跳到对应板块。</p>
+
+<h2 id="export">导出</h2>
+<table>
+  <tr><th>方式</th><th>超链接</th><th>图片</th><th>说明</th></tr>
+  <tr><td>打印 / 另存为 PDF</td><td>✅</td><td>✅</td><td>打印对话框里目标选「另存为 PDF」，含目录内部跳转</td></tr>
+  <tr><td>复制到 Google Docs</td><td>✅</td><td>多数情况 ✅</td><td>点完直接在 Docs 里 <kbd>Ctrl</kbd>+<kbd>V</kbd></td></tr>
+  <tr><td>下载 .doc</td><td>✅</td><td>多数情况 ✅</td><td>传到 Google Drive 用 Docs 打开，适合发给别人</td></tr>
+  <tr><td>下载 .html</td><td>✅</td><td>✅</td><td>完整自包含网页</td></tr>
+  <tr><td>Canva 导入 PDF</td><td>❌</td><td>✅</td><td>Canva 会把链接压掉，见下方说明</td></tr>
+</table>
+<div class="warn"><strong>关于 Canva：</strong>Canva 导入 PDF 会丢掉超链接，只保留版面，这是它的限制，任何工具都绕不过。
+要在 Canva 里保留链接，请勾选「附录：链接清单」，导入后照着清单给文字重新挂链接；
+截图可用「导出全部截图为图片文件」拿到原图（编号与报告顺序一致）。
+<strong>链接必须原样保留时，走 Google Docs 那条路。</strong></div>
+
+<h2 id="save">保存与迁移</h2>
+<p>内容自动存在浏览器本地，关掉再打开还在。要换电脑或做备份，用「保存项目」导出一个
+<code>.json</code>——里面<strong>内嵌了所有截图</strong>，在另一台机器上「载入项目」即可完整还原。</p>
+
+<h2 id="faq">常见问题</h2>
+<h3>点媒体名跳走了，没法改字</h3>
+<p>普通点击是编辑，<kbd>Ctrl</kbd>+点击才跳转。如果反了，说明你按住了 Ctrl。</p>
+<h3>刷新后截图没了</h3>
+<p>截图存在 IndexedDB 里。浏览器处于隐私模式、或站点数据被清除时会丢。重要项目请用「保存项目」导出 JSON 备份。</p>
+<h3>复制到 Google Docs 后图片没过去</h3>
+<p>图片能否随粘贴一起过去取决于浏览器，链接一定不会丢。图片没过去就用「导出全部截图为图片文件」拿到原图手动插入，
+文件名的编号和报告顺序是一致的。</p>
+<h3>侧栏显示「尚无 Logo 图库」</h3>
+<p>本地版需要先跑 <code>python extract_logos.py</code> 生成 <code>logos.js</code>。在线版是内置的，
+出现这个提示说明文件没加载出来，刷新一次试试。</p>
+<h3>导出的 PDF 把卡片从中间切断了</h3>
+<p>卡片本身设了禁止跨页断开。如果是某个超长板块被切开，可以把它拆成两个板块，或换成更紧凑的版式。</p>
+<h3>粘贴 Excel 后列对错了</h3>
+<p>在弹窗的五个下拉框里手动改映射，下面的预览表会实时跟着变，确认无误再点「生成」。</p>
+
+</div>
+
+<!-- ==================== English ==================== -->
+<div class="lang en">
+
+<h2 id="what-en">What this is</h2>
+<p>A single-file web tool. You paste in outlet names and reprint URLs, it lays them out as a
+distribution report, and the exported PDF keeps <strong>every outlet name as a working hyperlink</strong>.
+You can also copy the whole thing into Google Docs and keep editing there without losing the links.</p>
+<p>If you have a distribution-report PDF from EIN Presswire or similar, the companion script pulls the
+outlet logos out of it and pairs them with link domains. After that, pasting a bare list of reprint URLs
+is enough — <strong>names, locations and logos fill themselves in</strong>.</p>
+<div class="note">Everything runs in your own browser. Nothing is uploaded, and your work survives closing
+the page (it is stored locally).</div>
+
+<h2 id="start-en">Three-minute start</h2>
+<ol class="steps">
+  <li><strong>See it working.</strong> Click <em>Load sample</em> in the sidebar. A complete report appears on
+      the right — click any text to edit it in place.</li>
+  <li><strong>Swap in your data.</strong> Click <em>Paste Excel or a list of links</em>, paste your table or
+      URLs, then <em>Create</em>.</li>
+  <li><strong>Export.</strong> Click <em>Print / Save as PDF</em> and choose “Save as PDF” as the destination.
+      The links stay clickable.</li>
+</ol>
+<div class="tip">When in doubt, load the sample first and edit it — far quicker than starting from a blank page.</div>
+
+<h2 id="import-en">Importing data</h2>
+
+<h3>Paste from Excel</h3>
+<p>Select a range in Excel or Google Sheets, press <kbd>Ctrl</kbd>+<kbd>C</kbd>, then press
+<kbd>Ctrl</kbd>+<kbd>V</kbd> in the dialog’s text box. Columns are detected automatically — just confirm the
+mapping. A typical sheet looks like this:</p>
+<table class="sheet">
+  <tr><th>Outlet</th><th>Location</th><th>Link</th><th>Group</th></tr>
+  <tr><td>WIVB CBS 4</td><td>Buffalo (NY)</td><td>https://www.wivb.com/…</td><td>News platforms</td></tr>
+  <tr><td>WPIX CW 11</td><td>New York City (NY)</td><td>https://pix11.com/…</td><td>News platforms</td></tr>
+  <tr><td>Google News</td><td></td><td>https://news.google.com/…</td><td>Major newswires</td></tr>
+</table>
+<p>The <strong>Group</strong> mapping is the useful one: point it at a column and a single paste is
+<strong>split into several sections at once</strong>.</p>
+
+<h3>When you only have links</h3>
+<p>Paste a bare column of URLs. For any domain the logo library knows, the name, location and logo are filled
+in for you; unknown domains fall back to showing the domain itself, which you can then rename.</p>
+
+<h3>Hyperlinks inside the name cells</h3>
+<p>Many sheets carry the URL as a hyperlink on the outlet name rather than in its own column. That works too —
+the hyperlink is extracted on paste and offered in the mapping dropdowns as
+<code>⟨hyperlink of column N⟩</code>.</p>
+
+<h3>What each mapping does</h3>
+<table>
+  <tr><th>Mapping</th><th>Purpose</th></tr>
+  <tr><td>Name</td><td>The clickable display text. Required</td></tr>
+  <tr><td>Subtitle</td><td>Small grey line under the name — usually a location like <code>Buffalo (NY)</code></td></tr>
+  <tr><td>Link URL</td><td>Where the entry points</td></tr>
+  <tr><td>Image URL</td><td>Optional, if your sheet already carries logo URLs</td></tr>
+  <tr><td>Group</td><td>Optional. Splits the paste into sections by this column</td></tr>
+</table>
+<p>To append to an existing section instead, leave Group unmapped and pick
+<em>Append to: …</em> under “If no group column, write to”.</p>
+
+<h2 id="layout-en">Layouts</h2>
+<p>Each section has its own layout, changed under the ✎ button in the sidebar.</p>
+<table>
+  <tr><th>Layout</th><th>Appearance</th><th>Good for</th></tr>
+  <tr><td>Brand tiles, 2–4 col</td><td>Logo when there is one, otherwise the name in bold</td><td>Rows of newswire and search-engine tiles</td></tr>
+  <tr><td>Cards, 1–4 col</td><td>Name + location on the left, small logo on the right</td><td>Long runs of TV stations and papers</td></tr>
+  <tr><td>Screenshots, 1–3 col</td><td>Screenshot on top, caption below, whole image is the link</td><td>Showing the actual reprint pages</td></tr>
+  <tr><td>Link list, 3 col</td><td>Three columns of bulleted links, row-major</td><td>Long text-only channel lists</td></tr>
+  <tr><td>Pills</td><td>Flowing rounded chips</td><td>Keywords and tags</td></tr>
+  <tr><td>Table</td><td>Name / note / screenshot / link</td><td>When the full URL must be printed</td></tr>
+</table>
+<p>Three structurally different blocks are available from the dropdown next to <em>+ Add</em>:</p>
+<ul>
+  <li><strong>World media directory</strong> — grey boxes with region, target count and a three-column outlet list</li>
+  <li><strong>Social share row</strong> — Facebook / X / LinkedIn / Bluesky</li>
+  <li><strong>Report summary panel</strong> — word counts, anchor-text links, embedded images with captions</li>
+</ul>
+
+<h2 id="logos-en">Logo library</h2>
+<p>This is what powers “paste a link, get a logo”. <strong>The hosted version already includes it.</strong>
+Locally you generate it once:</p>
+<pre><code>pip install -r requirements.txt
+
+<span class="c"># put your distribution-report PDF in this folder, then:</span>
+python extract_logos.py</code></pre>
+<p>The script uses the coordinates of the PDF’s link annotations to locate each outlet card, then pairs the logo
+inside it with the outlet name, location and target domain, writing everything to <code>logos.js</code>.
+Reload and the sidebar reports <em>Logo library: N outlets / M logos</em>.</p>
+<p>Matching order: exact domain → strip sub-domains one level at a time → registrable domain → outlet name.
+Prefixes like <code>www.</code>, <code>m.</code> and <code>amp.</code> are ignored.</p>
+<ul>
+  <li>Run several different reports through it and the library <strong>merges, de-duplicates and grows</strong></li>
+  <li>If a name came out wrong, fix <code>logos_manifest.json</code> and re-run the script</li>
+  <li>To backfill an older project, click <em>Match logos by link across document</em></li>
+</ul>
+
+<h2 id="shots-en">Adding screenshots</h2>
+<p>Three ways, use whichever is closest to hand:</p>
+<ol>
+  <li><strong>Drag</strong> an image file onto a card. Drop several and they fill consecutive entries</li>
+  <li><strong>Paste</strong> — click the entry first (a bar appears at the bottom), then <kbd>Ctrl</kbd>+<kbd>V</kbd></li>
+  <li><strong>Bulk</strong> — select dozens at once in the section settings; they are matched by filename</li>
+</ol>
+<p>Filename matching goes: exact match on the entry name (ignoring case and punctuation) → fuzzy contains →
+a numeric prefix such as <code>01_xxx.png</code> → whatever is left fills the remaining slots in order.
+So naming a file <code>WPIX CW 11.png</code> or <code>03_xxx.png</code> both work.</p>
+<div class="note">Screenshots live in the browser’s IndexedDB (localStorage cannot hold them) and are resized to
+1400px wide on import. The sidebar footer shows how much space they use.</div>
+
+<h2 id="edit-en">Editing and theming</h2>
+<h3>Editing in place</h3>
+<p>Titles, outlet names and locations in the preview are directly editable and save as you type.
+Note that <strong>a plain click edits and <kbd>Ctrl</kbd>+click follows the link</strong> — otherwise clicking a
+heading to fix a typo would navigate away.</p>
+<h3>Theme colours</h3>
+<p>Under <em>Header &amp; branding</em> there is a row of colour presets; one click restyles the whole report.
+The default is navy with a magenta accent. For anything else, use the two colour pickers below.</p>
+<h3>Header</h3>
+<p>Brand name, tagline, logo (a local file, embedded into the document rather than linked), cover image and
+footer are all editable. Ticking <em>Table of contents</em> adds a contents block whose entries jump to the
+matching section inside the PDF.</p>
+
+<h2 id="export-en">Exporting</h2>
+<table>
+  <tr><th>Route</th><th>Links</th><th>Images</th><th>Notes</th></tr>
+  <tr><td>Print / Save as PDF</td><td>✅</td><td>✅</td><td>Choose “Save as PDF” as the destination; TOC anchors work</td></tr>
+  <tr><td>Copy to Google Docs</td><td>✅</td><td>usually ✅</td><td>Then <kbd>Ctrl</kbd>+<kbd>V</kbd> straight into Docs</td></tr>
+  <tr><td>Download .doc</td><td>✅</td><td>usually ✅</td><td>Upload to Drive and open with Docs; good for handing over</td></tr>
+  <tr><td>Download .html</td><td>✅</td><td>✅</td><td>Fully self-contained page</td></tr>
+  <tr><td>Import PDF into Canva</td><td>❌</td><td>✅</td><td>Canva strips links — see below</td></tr>
+</table>
+<div class="warn"><strong>About Canva:</strong> importing a PDF into Canva discards hyperlinks and keeps only the
+layout. That is Canva’s limitation and no tool can work around it. To keep links there, tick
+<em>Appendix: link index</em> and re-attach links from that list after importing; use
+<em>Export all screenshots as files</em> to get the original images, numbered in report order.
+<strong>When links must survive untouched, use the Google Docs route.</strong></div>
+
+<h2 id="save-en">Saving and moving</h2>
+<p>Your work is stored in the browser automatically. To move machines or keep a backup, use
+<em>Save project</em> to export a <code>.json</code> — it has <strong>every screenshot embedded</strong>, so
+<em>Load project</em> on another machine restores the whole thing.</p>
+
+<h2 id="faq-en">Troubleshooting</h2>
+<h3>Clicking an outlet name navigates away instead of editing</h3>
+<p>A plain click edits; <kbd>Ctrl</kbd>+click follows the link. If it behaves the other way round, Ctrl is held down.</p>
+<h3>Screenshots disappeared after reloading</h3>
+<p>They live in IndexedDB, which is cleared in private windows or when site data is wiped. For anything
+important, export a JSON backup with <em>Save project</em>.</p>
+<h3>Images did not come through to Google Docs</h3>
+<p>Whether images travel with the paste depends on the browser; the links always survive. If the images did not
+make it, use <em>Export all screenshots as files</em> and insert them manually — the filename numbering follows
+the report order.</p>
+<h3>The sidebar says there is no logo library</h3>
+<p>Locally you need to run <code>python extract_logos.py</code> once to produce <code>logos.js</code>. The hosted
+version ships with it, so if you see this there, the file failed to load — try reloading.</p>
+<h3>The exported PDF splits a card across pages</h3>
+<p>Cards are set not to break across pages. If a very long section is being split awkwardly, divide it into two
+sections or switch to a more compact layout.</p>
+<h3>The columns came out wrong after pasting</h3>
+<p>Fix the five mapping dropdowns in the dialog — the preview table below updates live, so you can check before
+clicking <em>Create</em>.</p>
+
+</div>
+
+    <footer>
+      <span id="ftxt">PR 链接报告生成器 · MIT License</span> ·
+      <a href="https://github.com/TreeAspen/pr-link-report" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="index.html" id="ftool">打开工具</a>
+    </footer>
+  </main>
+</div>
+
+<script>
+/* 目录、语言切换；语言选择与主工具共用同一个 localStorage 键 */
+const TOC = {
+  zh:[['what','这是什么'],['start','三分钟上手'],['import','导入数据'],['layout','版式'],
+      ['logos','Logo 图库'],['shots','配截图'],['edit','编辑与主题'],['export','导出'],
+      ['save','保存与迁移'],['faq','常见问题']],
+  en:[['what-en','What this is'],['start-en','Three-minute start'],['import-en','Importing data'],
+      ['layout-en','Layouts'],['logos-en','Logo library'],['shots-en','Adding screenshots'],
+      ['edit-en','Editing and theming'],['export-en','Exporting'],['save-en','Saving and moving'],
+      ['faq-en','Troubleshooting']]
+};
+const TXT = {
+  zh:{title:'PR 链接报告生成器 · 使用教程',
+      sub:'把 Excel 表格或一串链接，变成带可点击超链接、媒体 Logo 和页面截图的传播报告。',
+      open:'打开工具 →', toc:'目录', foot:'PR 链接报告生成器 · MIT License', tool:'打开工具',
+      doc:'使用教程 · PR 链接报告生成器'},
+  en:{title:'PR Link Report Builder · Tutorial',
+      sub:'Turn a spreadsheet — or just a list of URLs — into a report with clickable links, outlet logos and screenshots.',
+      open:'Open the tool →', toc:'Contents', foot:'PR Link Report Builder · MIT License', tool:'Open the tool',
+      doc:'Tutorial · PR Link Report Builder'}
+};
+
+let lang = 'zh';
+try{ lang = localStorage.getItem('pr-report-lang') === 'en' ? 'en' : 'zh'; }catch(e){}
+
+function apply(){
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+  document.title = TXT[lang].doc;
+  document.getElementById('pgTitle').textContent = TXT[lang].title;
+  document.getElementById('pgSub').textContent   = TXT[lang].sub;
+  document.getElementById('openApp').textContent = TXT[lang].open;
+  document.getElementById('ftxt').textContent    = TXT[lang].foot;
+  document.getElementById('ftool').textContent   = TXT[lang].tool;
+  document.querySelectorAll('.lang').forEach(n=> n.classList.toggle('on', n.classList.contains(lang)));
+  document.querySelectorAll('#langsw button').forEach(b=> b.classList.toggle('on', b.dataset.lang === lang));
+  document.getElementById('toc').innerHTML =
+    '<b>' + TXT[lang].toc + '</b>' +
+    TOC[lang].map(([id, label])=>`<a href="#${id}">${label}</a>`).join('');
+}
+document.getElementById('langsw').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-lang]');
+  if(!b) return;
+  lang = b.dataset.lang;
+  try{ localStorage.setItem('pr-report-lang', lang); }catch(e){}
+  apply();
+});
+apply();
+</script>
+</body>
+</html>

@@ -29,6 +29,11 @@
   .langsw{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex:0 0 auto}
   .langsw button{border:0;border-radius:0;padding:4px 9px;font-size:11.5px;background:#fff;color:var(--muted);line-height:1.4}
   .langsw button.on{background:var(--navy);color:#fff;font-weight:700}
+  .tutlink{
+    display:block;margin:0 0 14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;
+    font-size:12.5px;color:var(--navy);text-decoration:none;background:#f8fafc;font-weight:600;
+  }
+  .tutlink:hover{background:#eef2f7;border-color:#c7d2e0}
   .panel .hint{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 14px}
   .grp{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px}
   .grp>h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
@@ -40,6 +45,14 @@
   textarea{font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.5;resize:vertical}
   input[type=color]{padding:2px;height:32px}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  /* 主题色预设 */
+  .swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px}
+  .sw{padding:0;border:1px solid var(--line);border-radius:5px;overflow:hidden;display:flex;width:38px;height:26px;cursor:pointer}
+  .sw i{display:block;height:100%}
+  .sw i:first-child{width:70%}
+  .sw i:last-child{width:30%}
+  .sw:hover{border-color:#9ca3af}
+  .sw.on{outline:2px solid var(--navy);outline-offset:1px;border-color:transparent}
   button{
     font:inherit;font-size:13px;padding:7px 12px;border-radius:6px;border:1px solid var(--line);
     background:#fff;color:var(--ink);cursor:pointer
@@ -262,6 +275,7 @@
       </div>
     </div>
     <p class="hint" data-i18n="app.sub"></p>
+    <a class="tutlink" id="tutLink" href="tutorial.html" target="_blank" rel="noopener" data-i18n="app.tutorial"></a>
 
     <div class="grp">
       <h2 data-i18n="g1.h"></h2>
@@ -294,7 +308,9 @@
       <input type="text" id="fCoverCap" data-i18n-ph="g2.coverCap" style="margin-top:6px">
       <button id="btnCoverDel" style="margin-top:6px;font-size:12px;padding:4px 9px" data-i18n="g2.coverDel"></button>
       <label data-i18n="g2.footer"></label><input type="text" id="fFooter">
-      <div class="row2">
+      <label data-i18n="g2.theme"></label>
+      <div class="swatches" id="swatches"></div>
+      <div class="row2" style="margin-top:6px">
         <div><label data-i18n="g2.navy"></label><input type="color" id="fNavy"></div>
         <div><label data-i18n="g2.accent"></label><input type="color" id="fAccent"></div>
       </div>
@@ -390,6 +406,10 @@ zh:{
  'html.lang':'zh-CN',
  'app.title':'PR 链接报告生成器',
  'app.sub':'Excel 粘贴 → 批量生成带超链接的报告页 → 配截图 → 导出 PDF / Google Docs。右侧预览里的文字可直接点击修改。',
+ 'app.tutorial':'📖 使用教程 —— 新窗口打开',
+ 'g2.theme':'主题配色',
+ 'th.navy':'藏青（默认）','th.azure':'宝蓝','th.teal':'青碧','th.forest':'森绿',
+ 'th.burgundy':'酒红','th.plum':'紫棠','th.graphite':'石墨','th.ink':'墨蓝',
  'g1.h':'① 导入数据',
  'g1.import':'📋 粘贴 Excel / 链接清单，批量导入',
  'g1.match':'🔎 全文档按链接匹配 Logo',
@@ -471,6 +491,10 @@ en:{
  'html.lang':'en',
  'app.title':'PR Link Report Builder',
  'app.sub':'Paste from Excel → build a linked report page → add screenshots → export as PDF / Google Docs. Text in the preview is editable in place.',
+ 'app.tutorial':'📖 Tutorial — opens in a new tab',
+ 'g2.theme':'Theme colours',
+ 'th.navy':'Navy (default)','th.azure':'Azure','th.teal':'Teal','th.forest':'Forest',
+ 'th.burgundy':'Burgundy','th.plum':'Plum','th.graphite':'Graphite','th.ink':'Ink',
  'g1.h':'1 · Import data',
  'g1.import':'📋 Paste Excel or a list of links',
  'g1.match':'🔎 Match logos by link across document',
@@ -1023,6 +1047,7 @@ function render(){
 
   markSelection();
   renderPanel();
+  renderSwatches();
   updateStoreInfo();
   save();
 }
@@ -1378,6 +1403,33 @@ function syncFields(){
   document.getElementById('fToc').checked = !!state.toc;
   document.getElementById('fIndex').checked = !!state.linkIndex;
 }
+
+/* =========================================================
+   7b. 主题配色预设（首个为默认：藏青 + 品红）
+   ========================================================= */
+const THEMES = [
+  {k:'navy',     c:'#1b2a4e', a:'#e2245e'},
+  {k:'azure',    c:'#1d4ed8', a:'#f59e0b'},
+  {k:'teal',     c:'#0f766e', a:'#f43f5e'},
+  {k:'forest',   c:'#14532d', a:'#f97316'},
+  {k:'burgundy', c:'#7f1d1d', a:'#d97706'},
+  {k:'plum',     c:'#4c1d95', a:'#ec4899'},
+  {k:'graphite', c:'#1f2937', a:'#f59e0b'},
+  {k:'ink',      c:'#0f172a', a:'#38bdf8'}
+];
+function renderSwatches(){
+  document.getElementById('swatches').innerHTML = THEMES.map(th=>{
+    const on = th.c.toLowerCase() === (state.navy||'').toLowerCase()
+            && th.a.toLowerCase() === (state.accent||'').toLowerCase();
+    return `<button class="sw${on?' on':''}" data-c="${th.c}" data-a="${th.a}" title="${esc(t('th.'+th.k))}">
+      <i style="background:${th.c}"></i><i style="background:${th.a}"></i></button>`;
+  }).join('');
+}
+document.getElementById('swatches').addEventListener('click', e=>{
+  const b = e.target.closest('.sw'); if(!b) return;
+  state.navy = b.dataset.c; state.accent = b.dataset.a;
+  syncFields(); render();
+});
 
 /* =========================================================
    8. 导入弹窗

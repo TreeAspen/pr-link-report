@@ -3,6 +3,7 @@
 **English** · [中文](README.zh.md)
 
 > **Live demo:** <https://treeaspen.github.io/pr-link-report/> — the hosted build ships with the logo library and the full sample report.
+> **Tutorial:** <https://treeaspen.github.io/pr-link-report/tutorial.html> — bilingual walkthrough, also available offline as `tutorial.html`.
 
 Turn a spreadsheet — or just a list of URLs — into a press-release distribution report
 with clickable hyperlinks, outlet logos and page screenshots.
@@ -87,6 +88,11 @@ on import.
 Titles, names and locations in the preview are directly editable.
 A plain click edits; `Ctrl+click` follows the link.
 
+### Theming
+
+Eight colour presets (navy is the default) restyle the whole report in one click, with
+free-form colour pickers underneath for anything else.
+
 ---
 
 ## Export
@@ -111,6 +117,7 @@ originals (numbered in report order), then re-attach links in Canva from that li
 
 ```
 index.html            the tool (single file, all CSS/JS inline)
+tutorial.html         bilingual tutorial page (standalone)
 extract_logos.py      PDF → logo library
 build_sample.py       PDF → full sample project
 logos.js              generated: the library, with PNGs inlined

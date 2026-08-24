@@ -3,6 +3,7 @@
 [English](README.md) · **中文**
 
 > **在线版：** <https://treeaspen.github.io/pr-link-report/> —— 线上版本已内置 Logo 图库与完整示例，打开即可用。
+> **使用教程：** <https://treeaspen.github.io/pr-link-report/tutorial.html> —— 中英双语，离线也能看（`tutorial.html`）。
 
 把 Excel 表格或一串链接，变成一份带可点击超链接、媒体 Logo 和页面截图的传播报告。
 单文件、纯浏览器运行，不需要服务器，不需要联网。
@@ -80,6 +81,10 @@ python build_sample.py       # 还原完整样例    → sample.js
 右侧预览里的标题、名称、地区直接点击修改。
 普通点击 = 编辑，`Ctrl+点击` = 跳转链接。
 
+### 主题配色
+
+八套预设配色（默认藏青），一键换掉整份报告的标题条与强调色；下方另有取色器可自由调。
+
 ---
 
 ## 导出
@@ -104,6 +109,7 @@ Canva 路线：勾选「附录：链接清单」，再用「导出全部截图�
 
 ```
 index.html            主工具（单文件，含全部 CSS/JS）
+tutorial.html         使用教程页（中英双语，独立页面）
 extract_logos.py      PDF → Logo 图库
 build_sample.py       PDF → 完整样例项目
 logos.js              生成物：图库（内嵌 PNG）
