@@ -965,10 +965,12 @@ function summaryHtml(s){
   const f = s.summary || {};
   const li = (arr, fn) => (arr||[]).length ? `<ul>${arr.map(fn).join('')}</ul>` : '<p class="muted">—</p>';
   const fig = (f.images||[]).map(im=>{
-    const src = imgSrc(im.img);
-    return `<div class="sum-fig">${src?`<img src="${esc(src)}" alt="">`:''}<div class="meta">
+    const src = imgSrc(im.img), url = normUrl(im.url);
+    const pic = src ? `<img src="${esc(src)}" alt="${esc(im.name||'')}">` : '';
+    return `<div class="sum-fig">${
+      pic && url ? `<a href="${esc(url)}">${pic}</a>` : pic}<div class="meta">
       <b>Name:</b> ${esc(im.name||'')}<br><b>Caption:</b> ${esc(im.caption||'')}
-      ${im.url?`<br><a href="${esc(normUrl(im.url))}">Full-size Image</a>`:''}</div></div>`;
+      ${url?`<br><a href="${esc(url)}">Full-size Image</a>`:''}</div></div>`;
   }).join('');
   return `<div class="summary">
     <div>
@@ -1096,7 +1098,19 @@ function markSelection(){
 
 paper.addEventListener('click', e=>{
   const a = e.target.closest('a');
-  if(a && !(e.ctrlKey || e.metaKey)) e.preventDefault();   // 普通点击=编辑，Ctrl+点击=跳转
+  if(a && !(e.ctrlKey || e.metaKey)){
+    // 拦截只针对「可就地编辑」的链接：那里普通点击要用来改字，Ctrl+点击才跳转。
+    // 名录、分享行、报告摘要、截图这些不可编辑的链接，普通点击就该正常打开，
+    // 否则既编辑不了也跳不动，等于是死的。
+    const editable = a.isContentEditable || !!a.querySelector('[contenteditable="true"]');
+    const href = a.getAttribute('href') || '';
+    if(editable){
+      e.preventDefault();
+    } else if(href && !href.startsWith('#')){
+      e.preventDefault();
+      window.open(a.href, '_blank', 'noopener');   // 新窗口打开，不丢掉正在编辑的现场
+    }
+  }
   const el = e.target.closest('[data-sid][data-idx]');
   if(el){
     selected = {sid: el.dataset.sid, idx: +el.dataset.idx};

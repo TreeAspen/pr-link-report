@@ -85,8 +85,9 @@ on import.
 
 ### In-place editing
 
-Titles, names and locations in the preview are directly editable.
-A plain click edits; `Ctrl+click` follows the link.
+Titles, names and locations in the preview are directly editable. On editable text a plain click edits and
+`Ctrl+click` follows the link; non-editable links (tile logos, screenshots, the directory, share buttons,
+summary links) open in a new tab on a plain click.
 
 ### Theming
 

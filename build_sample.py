@@ -247,9 +247,13 @@ def build(pdf):
                 count = next((m["t"] for m in meta if "targets" in m["t"]), "")
                 names = merge_wraps(between(stream, s2, e2,
                                     lambda it: any(abs(it["x"] - c) < 4 for c in COL_X)))
+                # 地区名本身是链接（指向 EIN 的媒体名录页）；它被 SKIP_URL 当功能链接过滤掉了，
+                # 所以要从原始 links 里取回来
+                hdr = next((l["uri"] for l in links
+                            if s2 <= (l["p"], l["y"]) < e2 and "world-media-directory" in l["uri"]), "")
                 flag = {"China": "🇨🇳", "United States": "🇺🇸"}.get(region, "🗽")
                 regions.append({"flag": flag, "name": region, "count": count,
-                                "url": "", "names": names})
+                                "url": hdr, "names": names})
             sections.append({"type": "directory", "title": title,
                              "desc": desc, "regions": regions})
             continue

@@ -213,8 +213,14 @@ python extract_logos.py</code></pre>
 
 <h2 id="edit">编辑与主题</h2>
 <h3>就地改字</h3>
-<p>右侧预览里的标题、媒体名、地区都能直接点进去改，改完自动保存。
-注意：<strong>普通点击是编辑，<kbd>Ctrl</kbd>+点击才是跳转链接</strong>——否则点标题想改字会一直跳走。</p>
+<p>右侧预览里的标题、媒体名、地区都能直接点进去改，改完自动保存。</p>
+<p>点击规则按「这段文字能不能编辑」来分：</p>
+<ul>
+  <li><strong>能编辑的文字</strong>（卡片上的媒体名、板块标题、地区）——普通点击是<strong>改字</strong>，
+      <kbd>Ctrl</kbd>+点击才跳转。否则点标题想改个错别字会一直跳走。</li>
+  <li><strong>不能编辑的链接</strong>（品牌方块的 Logo、截图、媒体名录、分享按钮、报告摘要里的链接）——
+      普通点击就<strong>直接在新窗口打开</strong>，不用按 Ctrl。</li>
+</ul>
 <h3>主题配色</h3>
 <p>左栏「页头 / 品牌」里有一排配色方案，点一下整份报告的标题条和强调色就换了。
 默认是藏青 + 品红。想要别的颜色，用下面两个取色器自己调。</p>
@@ -242,7 +248,8 @@ python extract_logos.py</code></pre>
 
 <h2 id="faq">常见问题</h2>
 <h3>点媒体名跳走了，没法改字</h3>
-<p>普通点击是编辑，<kbd>Ctrl</kbd>+点击才跳转。如果反了，说明你按住了 Ctrl。</p>
+<p>卡片上的媒体名是可编辑的，普通点击应该进入编辑；会跳走说明你按住了 <kbd>Ctrl</kbd>。
+反过来，Logo 方块、截图、名录、分享按钮这些不可编辑的链接，普通点击就会在新窗口打开，这是正常的。</p>
 <h3>刷新后截图没了</h3>
 <p>截图存在 IndexedDB 里。浏览器处于隐私模式、或站点数据被清除时会丢。重要项目请用「保存项目」导出 JSON 备份。</p>
 <h3>复制到 Google Docs 后图片没过去</h3>
@@ -369,9 +376,15 @@ So naming a file <code>WPIX CW 11.png</code> or <code>03_xxx.png</code> both wor
 
 <h2 id="edit-en">Editing and theming</h2>
 <h3>Editing in place</h3>
-<p>Titles, outlet names and locations in the preview are directly editable and save as you type.
-Note that <strong>a plain click edits and <kbd>Ctrl</kbd>+click follows the link</strong> — otherwise clicking a
-heading to fix a typo would navigate away.</p>
+<p>Titles, outlet names and locations in the preview are directly editable and save as you type.</p>
+<p>What a click does depends on whether that text is editable:</p>
+<ul>
+  <li><strong>Editable text</strong> (outlet names on cards, section titles, locations) — a plain click
+      <strong>edits</strong>; <kbd>Ctrl</kbd>+click follows the link. Otherwise clicking a heading to fix a
+      typo would navigate away.</li>
+  <li><strong>Non-editable links</strong> (brand-tile logos, screenshots, the media directory, share buttons,
+      links in the report summary) — a plain click <strong>opens them in a new tab</strong>, no Ctrl needed.</li>
+</ul>
 <h3>Theme colours</h3>
 <p>Under <em>Header &amp; branding</em> there is a row of colour presets; one click restyles the whole report.
 The default is navy with a magenta accent. For anything else, use the two colour pickers below.</p>
@@ -402,7 +415,9 @@ layout. That is Canva’s limitation and no tool can work around it. To keep lin
 
 <h2 id="faq-en">Troubleshooting</h2>
 <h3>Clicking an outlet name navigates away instead of editing</h3>
-<p>A plain click edits; <kbd>Ctrl</kbd>+click follows the link. If it behaves the other way round, Ctrl is held down.</p>
+<p>Outlet names on cards are editable, so a plain click should start editing — if it navigates, Ctrl is held
+down. Non-editable links (tile logos, screenshots, the directory, share buttons) do open on a plain click;
+that is intended.</p>
 <h3>Screenshots disappeared after reloading</h3>
 <p>They live in IndexedDB, which is cleared in private windows or when site data is wiped. For anything
 important, export a JSON backup with <em>Save project</em>.</p>
